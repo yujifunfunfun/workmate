@@ -39,6 +39,8 @@ export function MyChatInterface({ agentId = "personalAgent" }: ChatInterfaceProp
                 <p className="text-lg mb-2">専属のAIエージェントです。</p>
                 <p className="text-sm">日々の協働を通じてあなたの思考パターン・知識・好みを学習します。</p>
                 <p className="text-sm">あなたのスタイルに合わせて成長し、より効率的なサポートを提供します。</p>
+                <p className="text-sm">Googleカレンダーを操作して日程調整・スケジュール作成を実行</p>
+                <p className="text-sm">Gmailを操作して会議の案内メールの文章を作成して送付</p>
               </div>
             </div>
           ) : (

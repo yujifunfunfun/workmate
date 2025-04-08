@@ -24,6 +24,24 @@ export default async function LibraryPage({
       icon: "🏆"
     },
     {
+      id: "sales-pitch",
+      name: "営業ロープレエージェント",
+      description: "ロープレシナリオ作成、フィードバック,ロープレと営業成績の相関関係を分析します。",
+      icon: "💼"
+    },
+    {
+      id: "sales-prospect",
+      name: "見込み客電話番号取得エージェント",
+      description: "見込み客の電話番号を取得します。",
+      icon: "📞"
+    },
+    {
+      id: "product-development",
+      name: "商品開発エージェント",
+      description: "企画・製造・物流など専門知識を持ったAIエージェントが議論を進行します。",
+      icon: "💡"
+    },
+    {
       id: "legal-contract",
       name: "法務・契約サポートエージェント",
       description: "標準契約書の作成と条項説明、契約書レビューと潜在的リスクの特定、法的質問への回答と参考判例の提示ができます。",
@@ -43,9 +61,15 @@ export default async function LibraryPage({
     },
     {
       id: "tech-support",
-      name: "技術支援エージェント",
-      description: "コードレビューと最適化提案、技術的な問題解決ガイド、新技術導入の影響評価と移行計画を支援します。",
-      icon: "💻"
+      name: "製品お問い合わせエージェント",
+      description: "製品に関する質問に回答します",
+      icon: "💁🏻‍♀️"
+    },
+    {
+      id: "research-support",
+      name: "リサーチエージェント",
+      description: "決算・企業ニュース・部署情報をリサーチし、自社製品の特徴から提案ドラフトを作成します",
+      icon: "🔍"
     }
   ];
 
