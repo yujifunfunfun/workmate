@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MarkdownRenderer } from "@/app/library/agent/sales-case/_components/MarkdownRenderer";
+import { MarkdownRenderer } from "@/app/(app)/library/agent/sales-case/_components/MarkdownRenderer";
 
 // 検索結果表示コンポーネント
 export function SearchResult({ result }: { result: string }) {

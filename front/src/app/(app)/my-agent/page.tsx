@@ -1,4 +1,4 @@
-import { MyChatInterface } from "@/app/my-agent/_components/MyChatInterface";
+import { MyChatInterface } from "@/app/(app)/my-agent/_components/MyChatInterface";
 
 export default function MyAgentPage() {
   return (

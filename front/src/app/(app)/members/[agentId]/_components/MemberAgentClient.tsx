@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChatInterface } from "@/app/my-agent/_components/ChatInterface";
+import { ChatInterface } from "@/app/(app)/my-agent/_components/ChatInterface";
 import Image from "next/image";
 import { MemberAgent } from "@/types/agent";
 

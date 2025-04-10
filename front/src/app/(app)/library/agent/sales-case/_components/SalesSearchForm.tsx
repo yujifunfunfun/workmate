@@ -1,7 +1,7 @@
 "use client";
 
 import { useCompletion } from "@ai-sdk/react";
-import { SearchResult, EmptyResult } from "@/app/library/agent/sales-case/_components/SearchResult";
+import { SearchResult, EmptyResult } from "@/app/(app)/library/agent/sales-case/_components/SearchResult";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
