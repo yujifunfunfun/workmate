@@ -4,4 +4,10 @@ curl -X GET http://localhost:4111/a -H "Authorization: Bearer eyJhbGciOiJIUzI1Ni
 curl -X POST http://localhost:4111/auth/login -H "Content-Type: application/json" -d '{"username":"testuser2","password":"testpassword"}' | cat
 
 
-curl -X POST http://localhost:4111/chat -H "Content-Type: application/json" -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImQ0MjdiYWI2LTQ5MTMtNDJkYy1iMTUzLTBhZTM2MWQyOGExMyIsInVzZXJuYW1lIjoidGVzdHVzZXIyIiwicm9sZSI6InVzZXIiLCJhZ2VudElkIjpudWxsLCJpYXQiOjE3NDQyNTI3NjUsImV4cCI6MTc0NDMzOTE2NX0.Cs5ZuE20n2bFdyN66PbqclGdMj3jVBx42pUMdKb-RoA" -d '{"message":"私のメアド教えて。ユーザーIDです：d427bab6-4913-42dc-b153-0ae361d28a13","userId":"d427bab6-4913-42dc-b153-0ae361d28a13"}' | cat
+curl -X POST http://localhost:4111/chat -H "Content-Type: application/json" -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImQ0MjdiYWI2LTQ5MTMtNDJkYy1iMTUzLTBhZTM2MWQyOGExMyIsInVzZXJuYW1lIjoidGVzdHVzZXIyIiwicm9sZSI6InVzZXIiLCJhZ2VudElkIjpudWxsLCJpYXQiOjE3NDQyNTI3NjUsImV4cCI6MTc0NDMzOTE2NX0.Cs5ZuE20n2bFdyN66PbqclGdMj3jVBx42pUMdKb-RoA" -d '{"message":"私のメアド教えて","userId":"d427bab6-4913-42dc-b153-0ae361d28a13"}' | cat
+
+
+curl -X POST http://localhost:4111/auth/register -H "Content-Type: application/json" -d '{"username":"testuser","password":"testpassword","email":"test@example.com"}' | cat
+
+
+curl -X GET "http://localhost:4111/chat/history?limit=10" -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImQ0MjdiYWI2LTQ5MTMtNDJkYy1iMTUzLTBhZTM2MWQyOGExMyIsInVzZXJuYW1lIjoidGVzdHVzZXIyIiwicm9sZSI6InVzZXIiLCJhZ2VudElkIjpudWxsLCJpYXQiOjE3NDQyNTI3NjUsImV4cCI6MTc0NDMzOTE2NX0.Cs5ZuE20n2bFdyN66PbqclGdMj3jVBx42pUMdKb-RoA" | cat

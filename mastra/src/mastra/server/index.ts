@@ -5,7 +5,7 @@ import { createAgentService } from "../../lib/agent-service";
 import type { Mastra } from "@mastra/core";
 import type { Context, Next } from "hono";
 import { fetchUserFromLibSQL } from "../../lib/fetchUser";
-import { createUserAgent } from "../agents/user/userAgent";
+import { createUserAgent, userMemory } from "../agents/user/userAgent";
 
 
 export const configureServer = {
@@ -127,8 +127,9 @@ export const configureServer = {
       middleware: [authMiddleware],
       handler: async (c) => {
         try {
-          const { message, threadId, userId } = await c.req.json();
-          const user = await fetchUserFromLibSQL(userId);
+          const user = getUserFromContext(c);
+          const { message } = await c.req.json();
+          // const message = 'こんにちは'
 
           if (!user) {
             return c.json({ success: false, message: 'ユーザー情報が見つかりません' }, 401);
@@ -138,21 +139,17 @@ export const configureServer = {
             return c.json({ success: false, message: 'メッセージは必須です' }, 400);
           }
 
-          // ユーザー名を取得してエージェントを生成
           const username = user.username;
           const agent = createUserAgent(username, user.id);
 
-          const chatThreadId = threadId || `thread-${user.id}-${Date.now()}`;
-          const response = await agent.generate(message, {
+          const threadId = user.username
+          const response = await agent.generate(message.content, {
             resourceId: user.id,
-            threadId: chatThreadId
+            threadId: threadId
           });
+          console.log(response)
 
-          return c.json({
-            success: true,
-            text: response.text,
-            threadId: chatThreadId
-          });
+          return c.json(response.text);
         } catch (error) {
           console.error('チャットエラー:', error);
           return c.json({ success: false, message: 'チャット処理中にエラーが発生しました' }, 500);
@@ -160,37 +157,121 @@ export const configureServer = {
       }
     }),
 
-    // registerApiRoute('/chat/stream', {
-    //   method: 'POST',
-    //   middleware: [authMiddleware],
-    //   handler: async (c) => {
-    //     try {
-    //       const { message, threadId, userId } = await c.req.json();
-    //       const user = await fetchUserFromLibSQL(userId);
 
-    //       if (!user) {
-    //         return c.json({ success: false, message: 'ユーザー情報が見つかりません' }, 401);
-    //       }
+    registerApiRoute('/chat/stream', {
+      method: 'POST',
+      middleware: [authMiddleware],
+      handler: async (c) => {
+        try {
+          const user = getUserFromContext(c);
+          const body = await c.req.json();
 
-    //       if (!message) {
-    //         return c.json({ success: false, message: 'メッセージは必須です' }, 400);
-    //       }
+          let messageText;
+          if (body.messages && Array.isArray(body.messages)) {
+            const userMessages = body.messages.filter((m: { role: string }) => m.role === 'user');
+            if (userMessages.length > 0) {
+              messageText = userMessages[userMessages.length - 1].content;
+            }
+          } else if (body.message && typeof body.message === 'string') {
+            messageText = body.message;
+          } else if (body.message && body.message.content) {
+            messageText = body.message.content;
+          } else {
+            messageText = JSON.stringify(body);
+          }
 
-    //       const username = user.username;
-    //       const agent = createUserAgent(username);
+          if (!user) {
+            return c.json({ success: false, message: 'ユーザー情報が見つかりません' }, 401);
+          }
 
-    //       const chatThreadId = threadId || `thread-${user.id}-${Date.now()}`;
-    //       const stream = await agent.stream(message, {
-    //         resourceId: user.id,
-    //         threadId: chatThreadId
-    //       });
+          if (!messageText) {
+            return c.json({ success: false, message: 'メッセージは必須です' }, 400);
+          }
 
-    //       return stream;
-    //     } catch (error) {
-    //       console.error('ストリーミングチャットエラー:', error);
-    //       return c.json({ success: false, message: 'ストリーミング処理中にエラーが発生しました' }, 500);
-    //     }
-    //   }
-    // })
+          const username = user.username;
+          const agent = createUserAgent(username, user.id);
+
+          const threadId = user.username;
+
+          // streamメソッドを使用してストリーミングレスポンスを取得
+          try {
+            const streamResponse = await agent.stream(messageText, {
+              resourceId: user.id,
+              threadId: threadId
+            });
+
+            // AI SDKのストリーミングレスポンスをそのまま返す
+            return streamResponse.toDataStreamResponse();
+          } catch (error) {
+            console.error('ストリーミング生成エラー:', error);
+
+            // フォールバック: 通常のレスポンスを試す
+            try {
+              const response = await agent.generate(messageText, {
+                resourceId: user.id,
+                threadId: threadId
+              });
+
+              // 通常のレスポンスをストリーミング形式に変換する
+              return c.json({
+                id: Date.now().toString(),
+                object: 'chat.completion',
+                choices: [
+                  {
+                    index: 0,
+                    message: {
+                      role: 'assistant',
+                      content: response.text
+                    }
+                  }
+                ]
+              });
+
+            } catch (fallbackError) {
+              console.error('フォールバックエラー:', fallbackError);
+              throw error; // 元のエラーをスロー
+            }
+          }
+        } catch (error) {
+          console.error('ストリーミングチャットエラー:', error);
+          return c.json({
+            success: false,
+            message: 'ストリーミング処理中にエラーが発生しました',
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }, 500);
+        }
+      }
+    }),
+
+
+    registerApiRoute('/chat/history', {
+      method: 'GET',
+      middleware: [authMiddleware],
+      handler: async (c) => {
+        try {
+          const user = getUserFromContext(c);
+          if (!user) {
+            return c.json({ success: false, message: 'ユーザー情報が見つかりません' }, 401);
+          }
+          const threadId = user.username;
+          const limit = parseInt(c.req.query('limit') || '20', 10);
+          const memory = userMemory;
+          const { uiMessages } = await memory.query({
+            threadId,
+            resourceId: user.id,
+            selectBy: {
+              last: limit
+            }
+          });
+          return c.json(uiMessages);
+        } catch (error) {
+          console.error('メッセージ履歴取得エラー:', error);
+          return c.json({ success: false, message: 'メッセージ履歴の取得中にエラーが発生しました' }, 500);
+        }
+      }
+    }),
+
   ]
 };
+
+

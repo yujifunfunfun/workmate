@@ -33,12 +33,11 @@ export function verifyPassword(storedPassword: string, suppliedPassword: string)
 }
 
 // JWTトークンの生成
-export function generateToken(user: { id: string; username: string; role: string; agent_id?: string }): string {
+export function generateToken(user: { id: string; username: string; email: string; }): string {
   const payload = {
     id: user.id,
     username: user.username,
-    role: user.role,
-    agentId: user.agent_id
+    email: user.email,
   };
 
   return jwt.sign(payload, JWT_SECRET, {
@@ -47,7 +46,7 @@ export function generateToken(user: { id: string; username: string; role: string
 }
 
 // ユーザーの登録
-export async function registerUser(username: string, password: string, email?: string, agentId?: string): Promise<any> {
+export async function registerUser(username: string, password: string, email: string, agentId?: string): Promise<any> {
   const userId = crypto.randomUUID();
   const hashedPassword = hashPassword(password);
 
@@ -60,7 +59,7 @@ export async function registerUser(username: string, password: string, email?: s
       args: [userId, username, hashedPassword, email || null, agentId || null]
     });
 
-    return { id: userId, username, email, agent_id: agentId };
+    return { id: userId, username, email, agent_id: agentId, token: generateToken({ id: userId, username, email }) };
   } catch (error) {
     console.error('ユーザー登録エラー:', error);
     throw error;

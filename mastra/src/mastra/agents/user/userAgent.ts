@@ -21,7 +21,7 @@ const vector = new LibSQLVector({
 
 const model = openai("gpt-4o");
 
-const userMemory = new Memory({
+export const userMemory = new Memory({
   storage,
   vector,
   options: {
