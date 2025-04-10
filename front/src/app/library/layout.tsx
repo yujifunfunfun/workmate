@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ReactNode } from "react";
 
 interface LibraryLayoutProps {
@@ -11,4 +10,4 @@ export default function LibraryLayout({ children }: LibraryLayoutProps) {
       {children}
     </div>
   );
-} 
+}
