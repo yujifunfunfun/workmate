@@ -9,6 +9,7 @@ import { similarCasesTool } from "../tools/similarSearch";
 
 const model = openai("gpt-4o");
 
+
 export const salesSuccessCaseAgent = new Agent({
   name: "営業成功事例検索エージェント",
   instructions: `
@@ -32,7 +33,7 @@ export const salesSuccessCaseAgent = new Agent({
 💼 [案件規模]: [規模や金額]
 📝 [成功のポイント]: [成功要因の簡潔な説明]
 💡 [使用した戦略]: [営業戦略や手法の概要]
-🔑 [キーとなった提案]: [決め手となった提案内容]ｚ
+🔑 [キーとなった提案]: [決め手となった提案内容]
 📊 [結果]: [成約に至った結果や成果]
 
 [必要に応じて事例を追加...]

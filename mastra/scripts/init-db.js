@@ -23,11 +23,9 @@ async function main() {
       url: 'file:.db/storage.db',
     });
 
-    // まず mastra_evals テーブルを作成または確認
     await createEvalsTable(client);
-
-    // 次に mastra_traces テーブルを作成または確認
     await createTracesTable(client);
+    await createUsersTable(client);
 
     // テーブル一覧の表示
     const tables = await client.execute(`
@@ -129,6 +127,47 @@ async function createTracesTable(client) {
     console.log('mastra_tracesテーブルにインデックスが作成されました');
   } else {
     console.log('mastra_tracesテーブルは既に存在します');
+  }
+}
+
+// ユーザーテーブルを作成する関数
+async function createUsersTable(client) {
+  console.log('usersテーブル作成を試みます...');
+
+  // usersテーブルの存在をチェック
+  const checkTableResult = await client.execute(`
+    SELECT name FROM sqlite_master
+    WHERE type='table' AND name='users'
+  `);
+
+  if (checkTableResult.rows.length === 0) {
+    console.log('usersテーブルが見つかりません。作成します...');
+
+    // テーブルの作成
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS users (
+        id TEXT NOT NULL PRIMARY KEY,
+        username TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        email TEXT UNIQUE,
+        role TEXT NOT NULL DEFAULT 'user',
+        agent_id TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('usersテーブルが作成されました');
+
+    // インデックスの作成
+    await client.execute(`
+      CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)
+    `);
+    await client.execute(`
+      CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)
+    `);
+    console.log('usersテーブルにインデックスが作成されました');
+  } else {
+    console.log('usersテーブルは既に存在します');
   }
 }
 

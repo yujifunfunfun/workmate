@@ -2,8 +2,9 @@ import { createLogger } from "@mastra/core/logger";
 import { Mastra } from "@mastra/core";
 import { salesSuccessCaseAgent } from "./agents/salesSuccessCaseAgent";
 import { salesSuccessCaseSearchWorkflow } from "./workflow/salesSuccessCaseSearchWorkflow";
-import { registerApiRoute } from "@mastra/core/server"
 import { LibSQLStore } from "@mastra/core/storage/libsql";
+import { configureServer } from "./server";
+import { userAgent } from "./agents/user/userAgent";
 
 
 const storage = new LibSQLStore({
@@ -13,7 +14,7 @@ const storage = new LibSQLStore({
 });
 
 export const mastra = new Mastra({
-  agents: { salesSuccessCaseAgent },
+  agents: { salesSuccessCaseAgent, userAgent },
   workflows: { salesSuccessCaseSearchWorkflow },
   logger: createLogger({
     name: "Mastra",
@@ -31,16 +32,5 @@ export const mastra = new Mastra({
       endpoint: "http://localhost:4318/v1/traces",
     },
   },
-  server: {
-    apiRoutes: [
-      registerApiRoute('/a', {
-        method: 'GET',
-        handler: async (c) => {
-          // const weatherAgent = mastra.getAgent('salesSuccessCaseAgent');
-          // const forecast = await weatherAgent.generate();
-          return c.json({ message: 'テスト成功' });
-        }
-      }),
-    ]
-  }
+  server: configureServer
 });
