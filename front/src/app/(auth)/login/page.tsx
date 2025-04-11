@@ -66,13 +66,9 @@ export default function LoginPage() {
   return (
     <div className="flex items-center justify-center h-[calc(100vh-132px)]">
       <div className="w-full max-w-md p-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-        <div className="space-y-2 text-center mb-6">
-          <h1 className="text-3xl font-bold">WorkMateへログイン</h1>
-          <p className="text-gray-500 dark:text-gray-400">
-            ユーザー名とパスワードを入力してログイン
-          </p>
+        <div className="space-y-2 text-center mb-8">
+          <h1 className="text-3xl font-bold">ログイン</h1>
         </div>
-
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-6">
             {error}

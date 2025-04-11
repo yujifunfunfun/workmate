@@ -1,11 +1,8 @@
 "use client";
 
 import { Sidebar } from "@/components/Sidebar";
-import { Bot, LogOut } from "lucide-react";
 import { ReactNode } from "react";
-import { useRouter } from "next/navigation";
-import { removeAuthToken } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
+import { Header } from "./_components/Header";
 
 
 interface AppLayoutProps {
@@ -13,32 +10,11 @@ interface AppLayoutProps {
 }
 
 export default function AppLayout({ children }: AppLayoutProps) {
-  const router = useRouter();
-
-  const handleLogout = () => {
-    // ログアウト処理
-    removeAuthToken();
-    // ログインページにリダイレクト
-    router.push("/login");
-  };
-
   return (
     <>
       <Sidebar />
       <div className="ml-64 flex flex-col min-h-screen">
-        <header className="bg-white dark:bg-gray-800 shadow py-4">
-          <div className="flex justify-end items-center px-4 gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-1"
-              onClick={handleLogout}
-            >
-              <LogOut className="h-4 w-4" />
-              <span>ログアウト</span>
-            </Button>
-          </div>
-        </header>
+        <Header />
         <main className="mx-auto p-4 flex-grow w-full">
           {children}
         </main>

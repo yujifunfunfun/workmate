@@ -1,15 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { ChatInterface } from "@/app/(app)/my-agent/_components/ChatInterface";
-import Image from "next/image";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { FilterHeader } from "@/app/(app)/members/_components/FilterHeader";
+import { AgentList } from "@/app/(app)/members/_components/AgentList";
+import { useEffect, useState } from "react";
 import { MemberAgent } from "@/types/agent";
 
-// モックデータ（メインページと同じデータを使用）
+// モックデータ
 const mockAgents: MemberAgent[] = [
   {
     id: "1",
+    username: "suzuki_ichiro",
     name: "鈴木 一郎",
     owner: "鈴木 一郎",
     department: "営業部",
@@ -19,6 +21,7 @@ const mockAgents: MemberAgent[] = [
   },
   {
     id: "2",
+    username: "tanaka_hanako",
     name: "田中 花子",
     owner: "田中 花子",
     department: "マーケティング部",
@@ -28,6 +31,7 @@ const mockAgents: MemberAgent[] = [
   },
   {
     id: "3",
+    username: "sato_kentaro",
     name: "佐藤 健太",
     owner: "佐藤 健太",
     department: "開発部",
@@ -37,6 +41,7 @@ const mockAgents: MemberAgent[] = [
   },
   {
     id: "4",
+    username: "yamada_yuko",
     name: "山田 優子",
     owner: "山田 優子",
     department: "人事部",
@@ -46,6 +51,7 @@ const mockAgents: MemberAgent[] = [
   },
   {
     id: "5",
+    username: "ito_makoto",
     name: "伊藤 誠",
     owner: "伊藤 誠",
     department: "経理部",
@@ -55,6 +61,7 @@ const mockAgents: MemberAgent[] = [
   },
   {
     id: "6",
+    username: "watanabe_ryo",
     name: "渡辺 隆",
     owner: "渡辺 隆",
     department: "カスタマーサポート部",
@@ -64,6 +71,7 @@ const mockAgents: MemberAgent[] = [
   },
   {
     id: "7",
+    username: "kobayashi_maria",
     name: "小林 真理",
     owner: "小林 真理",
     department: "営業部",
@@ -73,6 +81,7 @@ const mockAgents: MemberAgent[] = [
   },
   {
     id: "8",
+    username: "nakamura_shota",
     name: "中村 翔太",
     owner: "中村 翔太",
     department: "マーケティング部",
@@ -82,6 +91,7 @@ const mockAgents: MemberAgent[] = [
   },
   {
     id: "9",
+    username: "kato_misaki",
     name: "加藤 美咲",
     owner: "加藤 美咲",
     department: "開発部",
@@ -91,6 +101,7 @@ const mockAgents: MemberAgent[] = [
   },
   {
     id: "10",
+    username: "matsumoto_daisuke",
     name: "松本 大輔",
     owner: "松本 大輔",
     department: "人事部",
@@ -100,6 +111,7 @@ const mockAgents: MemberAgent[] = [
   },
   {
     id: "11",
+    username: "takahashi_kei",
     name: "高橋 恵",
     owner: "高橋 恵",
     department: "経理部",
@@ -109,6 +121,7 @@ const mockAgents: MemberAgent[] = [
   },
   {
     id: "12",
+    username: "yoshida_toy",
     name: "吉田 豊",
     owner: "吉田 豊",
     department: "カスタマーサポート部",
@@ -118,73 +131,122 @@ const mockAgents: MemberAgent[] = [
   }
 ];
 
-// IDからエージェントを取得するヘルパー関数
-const getMockAgent = (id: string): MemberAgent | undefined => {
-  return mockAgents.find(agent => agent.id === id);
-};
+export default function MembersAgentPage() {
+  const searchParams = useSearchParams();
 
-// クライアントコンポーネントとパラメータを受け取るラッパーコンポーネント
-interface MemberAgentClientProps {
-  agentId: string;
-}
+  const search = searchParams.get("search") || "";
+  const department = searchParams.get("department") || "";
+  const currentPage = Number(searchParams.get("page") || "1");
 
-export default function MemberAgentClient({ agentId }: MemberAgentClientProps) {
-  const [agent, setAgent] = useState<MemberAgent | null>(null);
-  const router = useRouter();
+  const pageSize = 6; // 1ページあたりの表示数
 
-  useEffect(() => {
-    const foundAgent = getMockAgent(agentId);
-    if (foundAgent) {
-      setAgent(foundAgent);
+  const [filteredAgents, setFilteredAgents] = useState<MemberAgent[]>(mockAgents);
+
+  // 検索条件でフィルタリングする関数
+  const filterAgents = (searchTerm: string, department: string): MemberAgent[] => {
+    return mockAgents.filter(agent => {
+      const matchesSearch = searchTerm === "" ||
+        agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        agent.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        agent.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        agent.description.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesDepartment = department === "" || agent.department === department;
+
+      return matchesSearch && matchesDepartment;
+    });
+  };
+
+  // ページネーション用のURLを生成する関数
+  const getPageUrl = (page: number) => {
+    const newParams = new URLSearchParams(searchParams.toString());
+
+    if (page > 1) {
+      newParams.set("page", page.toString());
     } else {
-      router.push("/members");
+      newParams.delete("page");
     }
-  }, [agentId, router]);
 
-  if (!agent) {
-    return <div className="container mx-auto p-8">読み込み中...</div>;
-  }
+    return `/members?${newParams.toString()}`;
+  };
+
+  // 検索条件が変更されたらフィルタリングを実行
+  useEffect(() => {
+    setFilteredAgents(filterAgents(search, department));
+  }, [search, department]);
+
+  // 現在のページに表示するエージェント
+  const paginatedAgents = filteredAgents.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  // 総ページ数
+  const totalPages = Math.ceil(filteredAgents.length / pageSize);
 
   return (
-    <div className="container">
-      <div className="mb-6 bg-white rounded-lg shadow-sm p-6 border">
-        <div className="flex items-start gap-6">
-          <div className="relative h-20 w-20 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
-            {agent.avatarUrl ? (
-              <Image
-                src={agent.avatarUrl}
-                alt={`${agent.name}のアバター`}
-                fill
-                className="object-cover"
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full w-full bg-primary text-primary-foreground text-2xl font-semibold">
-                {agent.name[0]}
-              </div>
-            )}
-          </div>
+    <div className="container mx-auto">
 
-          <div className="flex-grow">
-            <h1 className="text-2xl font-bold">{agent.name}</h1>
-            <p className="text-gray-600">{agent.owner}さんのエージェント</p>
-            <p className="text-gray-600">{agent.department}</p>
+      <FilterHeader
+        initialSearch={search}
+        initialDepartment={department}
+      />
 
-            <p className="mt-4 text-gray-700">{agent.description}</p>
+      <AgentList
+        agents={paginatedAgents}
+        emptyMessage="条件に一致するエージェントが見つかりませんでした。"
+      />
 
-            <div className="mt-4 flex flex-wrap gap-2">
-              {agent.skills.map((skill, index) => (
-                <span
-                  key={index}
-                  className="px-2 py-1 text-xs rounded-full bg-primary/10 text-primary"
-                >
-                  {skill}
-                </span>
-              ))}
-            </div>
+      {/* ページネーション */}
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-8">
+          <div className="flex space-x-2">
+            {/* 前のページボタン */}
+            <Link
+              href={getPageUrl(currentPage - 1)}
+              className={`px-4 py-2 rounded-md inline-flex items-center justify-center ${
+                currentPage <= 1
+                  ? "bg-gray-200 text-gray-400 pointer-events-none"
+                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              }`}
+              aria-disabled={currentPage <= 1}
+              tabIndex={currentPage <= 1 ? -1 : undefined}
+            >
+              前へ
+            </Link>
+
+            {/* ページ番号 */}
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <Link
+                key={page}
+                href={getPageUrl(page)}
+                className={`px-4 py-2 rounded-md inline-flex items-center justify-center ${
+                  currentPage === page
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                }`}
+                aria-current={currentPage === page ? "page" : undefined}
+              >
+                {page}
+              </Link>
+            ))}
+
+            {/* 次のページボタン */}
+            <Link
+              href={getPageUrl(currentPage + 1)}
+              className={`px-4 py-2 rounded-md inline-flex items-center justify-center ${
+                currentPage >= totalPages
+                  ? "bg-gray-200 text-gray-400 pointer-events-none"
+                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              }`}
+              aria-disabled={currentPage >= totalPages}
+              tabIndex={currentPage >= totalPages ? -1 : undefined}
+            >
+              次へ
+            </Link>
           </div>
         </div>
-      </div>
-      <ChatInterface owner={agent.owner} agentId={agentId} />
+      )}
     </div>
   );
 }

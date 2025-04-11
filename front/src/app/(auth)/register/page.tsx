@@ -22,8 +22,10 @@ import Link from "next/link";
 // 新規登録用のバリデーションスキーマ
 const registerSchema = z.object({
   username: z.string().min(3, "ユーザー名は3文字以上で入力してください"),
+  last_name: z.string().min(1, "姓を入力してください"),
+  first_name: z.string().min(1, "名を入力してください"),
   email: z.string().email("有効なメールアドレスを入力してください"),
-  password: z.string().min(8, "パスワードは8文字以上で入力してください")
+  password: z.string().min(2, "パスワードは2文字以上で入力してください")
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -37,6 +39,8 @@ export default function RegisterPage() {
     resolver: zodResolver(registerSchema),
     defaultValues: {
       username: "",
+      last_name: "",
+      first_name: "",
       email: "",
       password: ""
     }
@@ -102,6 +106,36 @@ export default function RegisterPage() {
                 </FormItem>
               )}
             />
+
+            <div className="flex gap-4">
+              <FormField
+                control={form.control}
+                name="last_name"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel>姓</FormLabel>
+                    <FormControl>
+                      <Input placeholder="山田" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="first_name"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel>名</FormLabel>
+                    <FormControl>
+                      <Input placeholder="太郎" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}

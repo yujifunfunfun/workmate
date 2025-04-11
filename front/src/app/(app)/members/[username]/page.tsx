@@ -1,11 +1,10 @@
 import MemberAgentClient from "./_components/MemberAgentClient";
 
-
 export default async function MemberAgentChatPage({
   params,
 }: {
-  params: Promise<{ agentId: string }>;
+  params: Promise<{ username: string }>;
 }) {
-  const { agentId } = await params;
-  return <MemberAgentClient agentId={agentId} />;
+  const { username } = await params;
+  return <MemberAgentClient username={username} />;
 }

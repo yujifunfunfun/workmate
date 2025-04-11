@@ -21,8 +21,8 @@ const departments = [
   "カスタマーサポート部"
 ];
 
-export function FilterHeader({ 
-  initialSearch = "", 
+export function FilterHeader({
+  initialSearch = "",
   initialDepartment = ""
 }: FilterHeaderProps) {
   const searchParams = useSearchParams();
@@ -45,46 +45,46 @@ export function FilterHeader({
   // 検索用のURLを生成する関数
   const getSearchUrl = () => {
     const newParams = new URLSearchParams(searchParams.toString());
-    
+
     // 検索ワードの設定
     if (searchTerm) {
       newParams.set("search", searchTerm);
     } else {
       newParams.delete("search");
     }
-    
+
     // 部署の維持（検索時に部署フィルタをリセットしない）
     const dept = searchParams.get("department");
     if (dept) {
       newParams.set("department", dept);
     }
-    
+
     // ページは1に戻す
     newParams.delete("page");
-    
+
     return `/members?${newParams.toString()}`;
   };
-  
+
   // 部署フィルター用のURLを生成する関数
   const getDepartmentUrl = (department: string) => {
     const newParams = new URLSearchParams(searchParams.toString());
-    
+
     // 部署の設定
     if (department && department !== "すべて") {
       newParams.set("department", department);
     } else {
       newParams.delete("department");
     }
-    
+
     // 検索ワードの維持
     const search = searchParams.get("search");
     if (search) {
       newParams.set("search", search);
     }
-    
+
     // ページは1に戻す
     newParams.delete("page");
-    
+
     return `/members?${newParams.toString()}`;
   };
 
@@ -101,7 +101,7 @@ export function FilterHeader({
             className="pl-10"
           />
         </div>
-        <Link 
+        <Link
           href={getSearchUrl()}
           className="ml-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 inline-flex items-center justify-center"
         >
@@ -113,7 +113,7 @@ export function FilterHeader({
         {departments.map((department) => {
           const isActive = activeDepartment === department;
           const url = getDepartmentUrl(department);
-          
+
           return (
             <Link
               key={department}

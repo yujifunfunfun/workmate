@@ -9,10 +9,10 @@ interface AgentCardProps {
 }
 
 export function AgentCard({ agent }: AgentCardProps) {
-  const { id, name, owner, department, description, skills, avatarUrl } = agent;
+  const { id, username, name, owner, department, description, skills, avatarUrl } = agent;
 
   return (
-    <Link href={`/members/${id}`} className="h-fit">
+    <Link href={`/members/${username}`} className="h-fit">
       <div className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white">
         <div className="p-6">
           <div className="flex items-start gap-4">

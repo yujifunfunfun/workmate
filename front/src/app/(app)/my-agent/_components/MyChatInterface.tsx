@@ -91,7 +91,7 @@ export function MyChatInterface() {
                 {message.role === "user" && (
                   <div className="relative h-8 w-8 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
                     <Image
-                      src='https://picsum.photos/id/1/100/100'
+                      src='https://picsum.photos/id/13/100/100'
                       alt='あなたのアバター'
                       fill
                       className="object-cover"
