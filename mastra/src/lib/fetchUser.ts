@@ -1,14 +1,9 @@
-import { createClient } from "@libsql/client";
-
-
-const client = createClient({
-  url: "file:../../.db/storage.db",
-});
+import { storageClient } from "./storageClient";
 
 export async function fetchUserFromLibSQL(userId: string) {
 
   try {
-    const result = await client.execute({
+    const result = await storageClient.execute({
       sql: "SELECT * FROM users WHERE id = ?",
       args: [userId]
     });
@@ -22,7 +17,8 @@ export async function fetchUserFromLibSQL(userId: string) {
       id: row.id as string,
       username: row.username as string,
       email: row.email as string,
-      role: row.role as string || "",
+      last_name: row.last_name as string || "",
+      first_name: row.first_name as string || "",
       createdAt: row.created_at as string || new Date().toISOString(),
       updatedAt: row.updated_at as string || new Date().toISOString(),
     };

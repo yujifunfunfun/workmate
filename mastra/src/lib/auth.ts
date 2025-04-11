@@ -46,20 +46,20 @@ export function generateToken(user: { id: string; username: string; email: strin
 }
 
 // ユーザーの登録
-export async function registerUser(username: string, password: string, email: string, agentId?: string): Promise<any> {
+export async function registerUser(username: string, password: string, email: string, last_name: string, first_name: string): Promise<any> {
   const userId = crypto.randomUUID();
   const hashedPassword = hashPassword(password);
 
   try {
     await dbClient.execute({
       sql: `
-        INSERT INTO users (id, username, password, email, agent_id)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO users (id, username, password, email, last_name, first_name)
+        VALUES (?, ?, ?, ?, ?, ?)
       `,
-      args: [userId, username, hashedPassword, email || null, agentId || null]
+      args: [userId, username, hashedPassword, email || null, last_name || null, first_name || null]
     });
 
-    return { id: userId, username, email, agent_id: agentId, token: generateToken({ id: userId, username, email }) };
+    return { id: userId, username, email, last_name, first_name, token: generateToken({ id: userId, username, email }) };
   } catch (error) {
     console.error('ユーザー登録エラー:', error);
     throw error;
@@ -88,8 +88,8 @@ export async function authenticateUser(username: string, password: string): Prom
       id: user.id,
       username: user.username,
       email: user.email,
-      role: user.role,
-      agent_id: user.agent_id,
+      last_name: user.last_name,
+      first_name: user.first_name,
       token: generateToken(user as any)
     };
   } catch (error) {
@@ -102,7 +102,7 @@ export async function authenticateUser(username: string, password: string): Prom
 export async function getUserById(userId: string): Promise<any> {
   try {
     const result = await dbClient.execute({
-      sql: `SELECT id, username, email, role, agent_id FROM users WHERE id = ?`,
+      sql: `SELECT id, username, email, last_name, first_name FROM users WHERE id = ?`,
       args: [userId]
     });
 

@@ -1,11 +1,11 @@
 import { registerApiRoute } from "@mastra/core/server";
 import { authMiddleware, getUserFromContext, jwtAuth } from "../../lib/middleware";
-import { registerUser, authenticateUser, updateUserAgentId } from "../../lib/auth";
-import { createAgentService } from "../../lib/agent-service";
-import type { Mastra } from "@mastra/core";
+import { registerUser, authenticateUser } from "../../lib/auth";
 import type { Context, Next } from "hono";
-import { fetchUserFromLibSQL } from "../../lib/fetchUser";
 import { createUserAgent, userMemory } from "../agents/user/userAgent";
+import { storageClient } from "../../lib/storageClient";
+import { createMemberAgent } from "../agents/member/memberAgent";
+import { memberMemory } from "../agents/member/memberAgent";
 
 
 export const configureServer = {
@@ -32,13 +32,13 @@ export const configureServer = {
       method: 'POST',
       handler: async (c) => {
         try {
-          const { username, password, email, agentId } = await c.req.json();
+          const { username, password, email, last_name, first_name } = await c.req.json();
 
           if (!username || !password) {
             return c.json({ success: false, message: 'ユーザー名とパスワードは必須です' }, 400);
           }
 
-          const user = await registerUser(username, password, email, agentId);
+          const user = await registerUser(username, password, email, last_name, first_name);
 
           return c.json({ success: true, user });
         } catch (error) {
@@ -82,78 +82,6 @@ export const configureServer = {
           message: '有効なトークンです',
           user: payload
         });
-      }
-    }),
-
-    registerApiRoute('/users/agent', {
-      method: 'PUT',
-      middleware: [authMiddleware],
-      handler: async (c) => {
-        try {
-          const { agentId } = await c.req.json();
-          const user = getUserFromContext(c);
-
-          if (!user) {
-            return c.json({ success: false, message: 'ユーザー情報が見つかりません' }, 401);
-          }
-
-          if (!agentId) {
-            return c.json({ success: false, message: 'エージェントIDは必須です' }, 400);
-          }
-
-          try {
-            const mastra = c.get('mastra') as Mastra;
-            mastra.getAgent(agentId);
-          } catch (e) {
-            return c.json({ success: false, message: '指定されたエージェントが存在しません' }, 404);
-          }
-
-          await updateUserAgentId(user.id, agentId);
-
-          const mastra = c.get('mastra') as Mastra;
-          const agentService = createAgentService(mastra, 'salesSuccessCaseAgent');
-          agentService.clearCache(user.id);
-
-          return c.json({ success: true, message: 'エージェント設定が更新されました' });
-        } catch (error) {
-          console.error('エージェント更新エラー:', error);
-          return c.json({ success: false, message: 'エージェント設定の更新中にエラーが発生しました' }, 500);
-        }
-      }
-    }),
-
-    registerApiRoute('/chat', {
-      method: 'POST',
-      middleware: [authMiddleware],
-      handler: async (c) => {
-        try {
-          const user = getUserFromContext(c);
-          const { message } = await c.req.json();
-          // const message = 'こんにちは'
-
-          if (!user) {
-            return c.json({ success: false, message: 'ユーザー情報が見つかりません' }, 401);
-          }
-
-          if (!message) {
-            return c.json({ success: false, message: 'メッセージは必須です' }, 400);
-          }
-
-          const username = user.username;
-          const agent = createUserAgent(username, user.id);
-
-          const threadId = user.username
-          const response = await agent.generate(message.content, {
-            resourceId: user.id,
-            threadId: threadId
-          });
-          console.log(response)
-
-          return c.json(response.text);
-        } catch (error) {
-          console.error('チャットエラー:', error);
-          return c.json({ success: false, message: 'チャット処理中にエラーが発生しました' }, 500);
-        }
       }
     }),
 
@@ -271,6 +199,405 @@ export const configureServer = {
       }
     }),
 
+    registerApiRoute('/members/:username/chat/stream', {
+      method: 'POST',
+      middleware: [authMiddleware],
+      handler: async (c) => {
+        try {
+          const ownerUsername = c.req.param('username');
+          const sql = `
+            SELECT id, username, email, first_name, last_name, created_at, updated_at
+            FROM users
+            WHERE username = ?
+          `;
+          const result = await storageClient.execute({
+            sql,
+            args: [ownerUsername]
+          });
+
+          const ownerUserId = result.rows[0].id;
+          const ownerUserLastName = result.rows[0].last_name;
+          const ownerUserFirstName = result.rows[0].first_name;
+          if (!ownerUserId || !ownerUserLastName || !ownerUserFirstName) {
+            return c.json({ success: false, message: 'ユーザー情報が見つかりません' }, 401);
+          }
+          const user = getUserFromContext(c);
+          const body = await c.req.json();
+
+          let messageText;
+          if (body.messages && Array.isArray(body.messages)) {
+            const userMessages = body.messages.filter((m: { role: string }) => m.role === 'user');
+            if (userMessages.length > 0) {
+              messageText = userMessages[userMessages.length - 1].content;
+            }
+          } else if (body.message && typeof body.message === 'string') {
+            messageText = body.message;
+          } else if (body.message && body.message.content) {
+            messageText = body.message.content;
+          } else {
+            messageText = JSON.stringify(body);
+          }
+
+          if (!user) {
+            return c.json({ success: false, message: 'ユーザー情報が見つかりません' }, 401);
+          }
+
+          if (!messageText) {
+            return c.json({ success: false, message: 'メッセージは必須です' }, 400);
+          }
+
+          const chatPartnerUsername = user.username;
+          const agent = createMemberAgent(ownerUsername, ownerUserId.toString(), ownerUserLastName.toString(), ownerUserFirstName.toString(), chatPartnerUsername);
+
+          const threadId = user.username;
+
+          try {
+            const streamResponse = await agent.stream(messageText, {
+              resourceId: `${ownerUserId}_${user.id}`,
+              threadId: `${ownerUserId}_${user.id}`
+            });
+
+            return streamResponse.toDataStreamResponse();
+          } catch (error) {
+            console.error('ストリーミング生成エラー:', error);
+
+            // フォールバック: 通常のレスポンスを試す
+            try {
+              const response = await agent.generate(messageText, {
+                resourceId: user.id,
+                threadId: threadId
+              });
+
+              // 通常のレスポンスをストリーミング形式に変換する
+              return c.json({
+                id: Date.now().toString(),
+                object: 'chat.completion',
+                choices: [
+                  {
+                    index: 0,
+                    message: {
+                      role: 'assistant',
+                      content: response.text
+                    }
+                  }
+                ]
+              });
+
+            } catch (fallbackError) {
+              console.error('フォールバックエラー:', fallbackError);
+              throw error; // 元のエラーをスロー
+            }
+          }
+        } catch (error) {
+          console.error('ストリーミングチャットエラー:', error);
+          return c.json({
+            success: false,
+            message: 'ストリーミング処理中にエラーが発生しました',
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }, 500);
+        }
+      }
+    }),
+
+    registerApiRoute('/members/:username/chat/history', {
+      method: 'GET',
+      middleware: [authMiddleware],
+      handler: async (c) => {
+        try {
+          const user = getUserFromContext(c);
+          if (!user) {
+            return c.json({ success: false, message: 'ユーザー情報が見つかりません' }, 401);
+          }
+
+          const ownerUsername = c.req.param('username');
+          const sql = `
+            SELECT id, username, email, first_name, last_name, created_at, updated_at
+            FROM users
+            WHERE username = ?
+          `;
+          const result = await storageClient.execute({
+            sql,
+            args: [ownerUsername]
+          });
+
+          const ownerUserId = result.rows[0].id;
+          if (!ownerUserId) {
+            return c.json({ success: false, message: 'ユーザー情報が見つかりません' }, 401);
+          }
+
+          const threadId = `${ownerUserId}_${user.id}`;
+          const limit = parseInt(c.req.query('limit') || '20', 10);
+          const memory = memberMemory;
+          const { uiMessages } = await memory.query({
+            threadId,
+            resourceId: `${ownerUserId}_${user.id}`,
+            selectBy: {
+              last: limit
+            }
+          });
+          return c.json(uiMessages);
+        } catch (error) {
+          console.error('メッセージ履歴取得エラー:', error);
+          return c.json({ success: false, message: 'メッセージ履歴の取得中にエラーが発生しました' }, 500);
+        }
+      }
+    }),
+
+
+
+
+
+    registerApiRoute('/users', {
+      method: 'GET',
+      handler: async (c) => {
+        try {
+
+          // クエリパラメータの取得
+          const limit = parseInt(c.req.query('limit') || '50', 10);
+          const offset = parseInt(c.req.query('offset') || '0', 10);
+          const search = c.req.query('search') || '';
+
+          // データベースからユーザー一覧を取得
+          let sql = `
+            SELECT id, username, email, first_name, last_name, created_at, updated_at
+            FROM users
+          `;
+
+          const args: any[] = [];
+
+          // 検索条件がある場合
+          if (search) {
+            sql += ` WHERE username LIKE ? OR email LIKE ? OR first_name LIKE ? OR last_name LIKE ?`;
+            const searchPattern = `%${search}%`;
+            args.push(searchPattern, searchPattern, searchPattern, searchPattern);
+          }
+
+          // ソートと制限
+          sql += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
+          args.push(limit, offset);
+
+
+
+          // ユーザー一覧の取得
+          const result = await storageClient.execute({
+            sql,
+            args
+          });
+
+          // 総ユーザー数の取得
+          let countSql = `SELECT COUNT(*) as total FROM users`;
+          if (search) {
+            countSql += ` WHERE username LIKE ? OR email LIKE ? OR first_name LIKE ? OR last_name LIKE ?`;
+          }
+
+          const countResult = await storageClient.execute({
+            sql: countSql,
+            args: search ? [
+              `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`
+            ] : []
+          });
+
+          const total = countResult.rows[0].total as number;
+
+          // ユーザーデータのフォーマット
+          const users = result.rows.map(row => ({
+            id: row.id,
+            username: row.username,
+            email: row.email,
+            firstName: row.first_name,
+            lastName: row.last_name,
+            createdAt: row.created_at,
+            updatedAt: row.updated_at
+          }));
+
+          return c.json({
+            success: true,
+            users,
+            pagination: {
+              total,
+              limit,
+              offset,
+              hasMore: offset + users.length < total
+            }
+          });
+        } catch (error) {
+          console.error('ユーザー一覧取得エラー:', error);
+          return c.json({
+            success: false,
+            message: 'ユーザー一覧の取得中にエラーが発生しました',
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }, 500);
+        }
+      }
+    }),
+
+
+    registerApiRoute('/users/me', {
+      method: 'GET',
+      middleware: [authMiddleware],
+      handler: async (c) => {
+        try {
+          const user = getUserFromContext(c);
+          if (!user) {
+            return c.json({ success: false, message: 'ユーザー情報が見つかりません' }, 401);
+          }
+          return c.json(user);
+        } catch (error) {
+          console.error('ユーザー情報取得エラー:', error);
+          return c.json({
+            success: false,
+            message: 'ユーザー情報取得エラーが発生しました',
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }, 500);
+        }
+      }
+    }),
+
+    registerApiRoute('/members/agents', {
+      method: 'GET',
+      middleware: [authMiddleware],
+      handler: async (c) => {
+        try {
+          const user = getUserFromContext(c);
+          if (!user) {
+            return c.json({ success: false, message: 'ユーザー情報が見つかりません' }, 401);
+          }
+          // クエリパラメータの取得
+          const limit = parseInt(c.req.query('limit') || '50', 10);
+          const offset = parseInt(c.req.query('offset') || '0', 10);
+          const search = c.req.query('search') || '';
+
+          // データベースからユーザー一覧を取得
+          let sql = `
+            SELECT id, username, email, first_name, last_name, created_at, updated_at
+            FROM users
+            WHERE id != ?
+          `;
+
+          const args: any[] = [user.id];
+
+          // 検索条件がある場合
+          if (search) {
+            sql += ` AND (username LIKE ? OR email LIKE ? OR first_name LIKE ? OR last_name LIKE ?)`;
+            const searchPattern = `%${search}%`;
+            args.push(searchPattern, searchPattern, searchPattern, searchPattern);
+          }
+
+          // ソートと制限
+          sql += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
+          args.push(limit, offset);
+
+
+
+          // ユーザー一覧の取得
+          const result = await storageClient.execute({
+            sql,
+            args
+          });
+
+          // 総ユーザー数の取得
+          let countSql = `SELECT COUNT(*) as total FROM users WHERE id != ?`;
+          if (search) {
+            countSql += ` AND (username LIKE ? OR email LIKE ? OR first_name LIKE ? OR last_name LIKE ?)`;
+          }
+
+          const countResult = await storageClient.execute({
+            sql: countSql,
+            args: search ? [
+              user.id, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`
+            ] : [user.id]
+          });
+
+          const total = countResult.rows[0].total as number;
+
+          // ユーザーデータのフォーマット
+          const members = result.rows.map(row => ({
+            id: row.id,
+            username: row.username,
+            email: row.email,
+            firstName: row.first_name,
+            lastName: row.last_name,
+            createdAt: row.created_at,
+            updatedAt: row.updated_at
+          }));
+
+          return c.json({
+            success: true,
+            members: members,
+            pagination: {
+              total,
+              limit,
+              offset,
+              hasMore: offset + members.length < total
+            }
+          });
+        } catch (error) {
+          console.error('ユーザー一覧取得エラー:', error);
+          return c.json({
+            success: false,
+            message: 'ユーザー一覧の取得中にエラーが発生しました',
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }, 500);
+        }
+      }
+    }),
+
+
+    registerApiRoute('/members/:username', {
+      method: 'GET',
+      middleware: [authMiddleware],
+      handler: async (c) => {
+        try {
+          const user = getUserFromContext(c);
+          if (!user) {
+            return c.json({ success: false, message: 'ユーザー情報が見つかりません' }, 401);
+          }
+
+          const username = c.req.param('username');
+
+          if (!username) {
+            return c.json({ success: false, message: 'ユーザー名が必要です' }, 400);
+          }
+
+          // データベースから指定したユーザー名のユーザーを取得
+          const sql = `
+            SELECT id, username, email, first_name, last_name, created_at, updated_at
+            FROM users
+            WHERE username = ?
+          `;
+
+          // ユーザー情報の取得
+          const result = await storageClient.execute({
+            sql,
+            args: [username]
+          });
+
+          if (result.rows.length === 0) {
+            return c.json({ success: false, message: 'ユーザーが見つかりません' }, 404);
+          }
+
+          // ユーザーデータのフォーマット
+          const member = {
+            id: result.rows[0].id,
+            username: result.rows[0].username,
+            email: result.rows[0].email,
+            firstName: result.rows[0].first_name,
+            lastName: result.rows[0].last_name,
+            createdAt: result.rows[0].created_at,
+            updatedAt: result.rows[0].updated_at
+          };
+
+          return c.json(member);
+        } catch (error) {
+          console.error('ユーザー情報取得エラー:', error);
+          return c.json({
+            success: false,
+            message: 'ユーザー情報の取得中にエラーが発生しました',
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }, 500);
+        }
+      }
+    }),
   ]
 };
 

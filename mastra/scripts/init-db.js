@@ -150,8 +150,8 @@ async function createUsersTable(client) {
         username TEXT NOT NULL UNIQUE,
         password TEXT NOT NULL,
         email TEXT UNIQUE,
-        role TEXT NOT NULL DEFAULT 'user',
-        agent_id TEXT,
+        last_name TEXT NOT NULL,
+        first_name TEXT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )

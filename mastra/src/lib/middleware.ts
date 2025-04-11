@@ -9,8 +9,8 @@ export interface UserInfo {
   id: string;
   username: string;
   email?: string;
-  role: string;
-  agent_id?: string;
+  last_name?: string;
+  first_name?: string;
 }
 
 // コンテキストからユーザー情報を取得するためのヘルパー関数
@@ -70,10 +70,6 @@ export function roleCheckMiddleware(requiredRole: string) {
       return new Response('認証が必要です', { status: 401 });
     }
 
-    // ユーザーの権限を確認
-    if (user.role !== requiredRole && user.role !== 'admin') {
-      return new Response('権限がありません', { status: 403 });
-    }
 
     // 権限があれば次へ
     return await next();
