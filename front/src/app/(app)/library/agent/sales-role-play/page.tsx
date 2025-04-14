@@ -71,7 +71,7 @@ export default function SalesRolePlayPage() {
             {transcriptions.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-gray-500">
               <Mic className="h-12 w-12 mb-2 stroke-1" />
-              <p>「話しかける」ボタンをクリックして録音を開始してください</p>
+              <p>「話しかける」ボタンをクリックして会話をはじめましょう！</p>
             </div>
             ) : (
               transcriptions.map((message, index) => (
