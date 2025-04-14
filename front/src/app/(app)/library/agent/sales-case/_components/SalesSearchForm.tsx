@@ -25,7 +25,7 @@ export function SalesSearchForm() {
   });
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto">
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="w-full lg:w-2/5">
           <Card className="h-fit">
