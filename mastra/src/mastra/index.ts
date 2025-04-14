@@ -5,6 +5,7 @@ import { salesSuccessCaseSearchWorkflow } from "./workflow/salesSuccessCaseSearc
 import { LibSQLStore } from "@mastra/core/storage/libsql";
 import { configureServer } from "./server";
 import { userAgent } from "./agents/user/userAgent";
+import { salesRolePlayAgent } from "./agents/sales-role-play/salesRolePlayAgent";
 
 
 const storage = new LibSQLStore({
@@ -14,7 +15,7 @@ const storage = new LibSQLStore({
 });
 
 export const mastra = new Mastra({
-  agents: { salesSuccessCaseAgent, userAgent },
+  agents: { salesSuccessCaseAgent, userAgent, salesRolePlayAgent },
   workflows: { salesSuccessCaseSearchWorkflow },
   logger: createLogger({
     name: "Mastra",
