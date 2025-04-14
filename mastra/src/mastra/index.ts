@@ -6,6 +6,7 @@ import { LibSQLStore } from "@mastra/core/storage/libsql";
 import { configureServer } from "./server";
 import { userAgent } from "./agents/user/userAgent";
 import { salesRolePlayAgent } from "./agents/sales-role-play/salesRolePlayAgent";
+import { productStrategyPlanningNetwork } from "./networks/product-strategy-planning";
 
 
 const storage = new LibSQLStore({
@@ -33,5 +34,6 @@ export const mastra = new Mastra({
       endpoint: "http://localhost:4318/v1/traces",
     },
   },
+  networks: { productStrategyPlanningNetwork },
   server: configureServer
 });

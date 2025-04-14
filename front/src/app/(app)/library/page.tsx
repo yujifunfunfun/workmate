@@ -34,6 +34,14 @@ export default async function LibraryPage({
       isAvailable: true
     },
     {
+      id: "product-strategy-planning",
+      name: "製品戦略立案エージェント",
+      description: "製品戦略立案エージェントです。",
+      icon: "📊",
+      category: "事業開発",
+      isAvailable: true
+    },
+    {
       id: "sales-prospect",
       name: "見込み客電話番号取得エージェント",
       description: "見込み客の電話番号を取得します。",
@@ -161,7 +169,7 @@ export default async function LibraryPage({
           >
             <div className="p-6 h-full flex flex-col justify-between">
               <div>
-                <div className="flex items-start gap-4 mb-4">
+                <div className="flex items-center gap-4 mb-4">
                   <div className="text-3xl">{app.icon}</div>
                   <div>
                     <h3 className="text-xl font-semibold">{app.name}</h3>
@@ -181,7 +189,7 @@ export default async function LibraryPage({
                   <ArrowRight className="ml-1 w-4 h-4" />
                 </Link>
               ) : (
-                <p className="">
+                <p>
                   coming soon...
                 </p>
               )}
