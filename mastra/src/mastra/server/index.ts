@@ -98,10 +98,26 @@ export const configureServer = {
           if (body.messages && Array.isArray(body.messages)) {
             const userMessages = body.messages.filter((m: { role: string }) => m.role === 'user');
             if (userMessages.length > 0) {
-              messageText = userMessages[userMessages.length - 1].content;
+              const lastUserMessage = userMessages[userMessages.length - 1];
+              if (Array.isArray(lastUserMessage.content)) {
+                // 新しい形式: content が配列で、その中に {type: 'text', text: '...'} オブジェクトがある
+                const textContent = lastUserMessage.content.find((item: any) => item.type === 'text');
+                if (textContent) {
+                  messageText = textContent.text;
+                }
+              } else {
+                // 以前の形式: content が直接テキスト
+                messageText = lastUserMessage.content;
+              }
             }
           } else if (body.message && typeof body.message === 'string') {
             messageText = body.message;
+          } else if (body.message && Array.isArray(body.message.content)) {
+            // 新しい形式に対応: content が配列
+            const textContent = body.message.content.find((item: any) => item.type === 'text');
+            if (textContent) {
+              messageText = textContent.text;
+            }
           } else if (body.message && body.message.content) {
             messageText = body.message.content;
           } else {
@@ -228,10 +244,26 @@ export const configureServer = {
           if (body.messages && Array.isArray(body.messages)) {
             const userMessages = body.messages.filter((m: { role: string }) => m.role === 'user');
             if (userMessages.length > 0) {
-              messageText = userMessages[userMessages.length - 1].content;
+              const lastUserMessage = userMessages[userMessages.length - 1];
+              if (Array.isArray(lastUserMessage.content)) {
+                // 新しい形式: content が配列で、その中に {type: 'text', text: '...'} オブジェクトがある
+                const textContent = lastUserMessage.content.find((item: any) => item.type === 'text');
+                if (textContent) {
+                  messageText = textContent.text;
+                }
+              } else {
+                // 以前の形式: content が直接テキスト
+                messageText = lastUserMessage.content;
+              }
             }
           } else if (body.message && typeof body.message === 'string') {
             messageText = body.message;
+          } else if (body.message && Array.isArray(body.message.content)) {
+            // 新しい形式に対応: content が配列
+            const textContent = body.message.content.find((item: any) => item.type === 'text');
+            if (textContent) {
+              messageText = textContent.text;
+            }
           } else if (body.message && body.message.content) {
             messageText = body.message.content;
           } else {

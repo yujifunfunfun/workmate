@@ -20,3 +20,65 @@ curl -X GET "http://localhost:4111/members/agents" -H "Authorization: Bearer eyJ
 
 
 curl -X GET "http://localhost:4111/members/testuser" -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjE3MDczYmZiLTUzZjYtNGMwZi1hY2NlLWYyMDkwMzA4MjNkOCIsInVzZXJuYW1lIjoidGVzdHVzZXIiLCJlbWFpbCI6InR5dWppMDUxNjA1MTYwNTE2QGdtYWlsLmNvbSIsImlhdCI6MTc0NDI3MjkxMSwiZXhwIjoxNzQ0MzU5MzExfQ.9G02snr2s6IWccqCrYNwwLKD1hJRm8WBwVDtoaqQUNk" | jq
+[
+    {
+        "id": "3b015452-f646-4bc2-922e-70ed62827e2c",
+        "role": "user",
+        "content": "こんにちは",
+        "toolInvocations": []
+    },
+    {
+        "id": "df826171-f531-4bef-b7fd-c863c0f009da",
+        "role": "assistant",
+        "content": "こんにちは！今日はどのようにお手伝いできますか？",
+        "toolInvocations": []
+    },
+    {
+        "id": "8590d902-01f5-4caf-a561-910315d03e8a",
+        "role": "user",
+        "content": "あなたは誰のエージェントですか？",
+        "toolInvocations": []
+    },
+    {
+        "id": "85d8b6f4-c9e8-4e66-9e37-79ea09940856",
+        "role": "assistant",
+        "content": "私はあなた、testuser専属のエージェントです。あなたのユーザーIDは17073bfb-53f6-4c0f-acce-f209030823d8です。何かお手伝いできることがあれば教えてください。",
+        "toolInvocations": []
+    },
+    {
+        "id": "ee1d5541-3e38-4820-8075-28ecd31f52ba",
+        "role": "user",
+        "content": "こんにちは",
+        "toolInvocations": []
+    },
+    {
+        "id": "5067b30e-882a-4afe-90aa-6ad01a211dad",
+        "role": "assistant",
+        "content": "こんにちは！今日はどのようなことをお手伝いしましょうか？",
+        "toolInvocations": []
+    },
+    {
+        "id": "d8ba0e21-f3a7-4ca5-ac80-da4023ec242f",
+        "role": "user",
+        "content": "こんにちは",
+        "toolInvocations": []
+    },
+    {
+        "id": "6b98aa11-c2e8-475d-8edc-a8fc3de06e53",
+        "role": "assistant",
+        "content": "こんにちは！何かお手伝いできることがあれば教えてください。",
+        "toolInvocations": []
+    },
+    {
+        "id": "d7b2bfc6-ea73-4100-af8f-0137bdbfb977",
+        "role": "user",
+        "content": "天気がいいですね",
+        "toolInvocations": []
+    },
+    {
+        "id": "8806c899-ab32-4d38-aa39-4dee1c34279b",
+        "role": "assistant",
+        "content": "そうですね、天気が良いと気分も晴れやかになりますね！今日は何か特別な予定がありますか？",
+        "toolInvocations": []
+    }
+]
