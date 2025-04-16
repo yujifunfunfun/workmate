@@ -42,6 +42,14 @@ export default async function LibraryPage({
       isAvailable: true
     },
     {
+      id: "meeting-minutes",
+      name: "議事録作成エージェント",
+      description: "会議を録音し、議事録を作成します。",
+      icon: "📝",
+      category: "カスタマーサポート",
+      isAvailable: true
+    },
+    {
       id: "sales-prospect",
       name: "見込み客電話番号取得エージェント",
       description: "見込み客の電話番号を取得します。",
