@@ -19,7 +19,8 @@
     "@libsql/client": "^0.15.1",
     "@mastra/core": "^0.8.2",
     "@mastra/evals": "^0.1.16",
-    "@mastra/mcp": "^0.3.8",
+    "@mastra/mcp": "^0.3.10",
+    "@mastra/mcp-registry-registry": "^0.0.1",
     "@mastra/memory": "^0.2.9",
     "@mastra/rag": "^0.1.16",
     "@mastra/voice-openai": "^0.1.13",
@@ -29,7 +30,7 @@
     "dotenv": "^16.4.7",
     "hono": "^4.7.6",
     "jsonwebtoken": "^9.0.2",
-    "mastra": "^0.4.8",
+    "mastra": "^0.4.9",
     "zod": "^3.24.2"
   },
   "devDependencies": {

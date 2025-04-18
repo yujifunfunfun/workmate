@@ -8,6 +8,7 @@ import { createMemberAgent } from "../agents/member/memberAgent";
 import { memberMemory } from "../agents/member/memberAgent";
 
 
+
 export const configureServer = {
   middleware: [
     async (c: Context, next: Next) => {
@@ -93,6 +94,7 @@ export const configureServer = {
         try {
           const user = getUserFromContext(c);
           const body = await c.req.json();
+          const threadId = body.threadId;
 
           let messageText;
           if (body.messages && Array.isArray(body.messages)) {
@@ -135,7 +137,6 @@ export const configureServer = {
           const username = user.username;
           const agent = createUserAgent(username, user.id);
 
-          const threadId = user.username;
 
           // streamメソッドを使用してストリーミングレスポンスを取得
           try {
@@ -197,17 +198,52 @@ export const configureServer = {
           if (!user) {
             return c.json({ success: false, message: 'ユーザー情報が見つかりません' }, 401);
           }
-          const threadId = user.username;
+
+          const threadId = c.req.query('threadId');
+
+          if (!threadId) {
+            return c.json([]);
+          }
           const limit = parseInt(c.req.query('limit') || '20', 10);
           const memory = userMemory;
           const { uiMessages } = await memory.query({
-            threadId,
             resourceId: user.id,
+            threadId,
             selectBy: {
               last: limit
             }
           });
           return c.json(uiMessages);
+        } catch (error) {
+          console.error('メッセージ履歴取得エラー:', error);
+          return c.json([]);
+        }
+      }
+    }),
+
+    registerApiRoute('/threads', {
+      method: 'GET',
+      middleware: [authMiddleware],
+      handler: async (c) => {
+        try {
+          const user = getUserFromContext(c);
+          if (!user) {
+            return c.json({ success: false, message: 'ユーザー情報が見つかりません' }, 401);
+          }
+          const memory = userMemory;
+          const threads = await memory.getThreadsByResourceId({
+            resourceId: user.id,
+          });
+
+          // 日時の新しい順に並べ替え（updatedAtまたはcreatedAtを使用）
+          const sortedThreads = threads.sort((a, b) => {
+            // updatedAtフィールドがある場合はそれを使用
+            const dateA = a.updatedAt || a.createdAt || 0;
+            const dateB = b.updatedAt || b.createdAt || 0;
+            return new Date(dateB).getTime() - new Date(dateA).getTime();
+          });
+
+          return c.json(sortedThreads);
         } catch (error) {
           console.error('メッセージ履歴取得エラー:', error);
           return c.json({ success: false, message: 'メッセージ履歴の取得中にエラーが発生しました' }, 500);

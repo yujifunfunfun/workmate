@@ -6,6 +6,13 @@
         "-y",
         "@mastra/mcp-docs-server@latest"
       ]
+    },
+    "registry": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@mastra/mcp-registry-registry@latest"
+      ]
     }
   }
 }
