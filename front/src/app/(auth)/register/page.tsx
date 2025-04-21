@@ -18,8 +18,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
+import { v4 as uuidv4 } from 'uuid';
 
-// 新規登録用のバリデーションスキーマ
+
 const registerSchema = z.object({
   username: z.string().min(3, "ユーザー名は3文字以上で入力してください"),
   last_name: z.string().min(1, "姓を入力してください"),
@@ -67,7 +68,7 @@ export default function RegisterPage() {
       const res = await response.json();
       const token = res.user.token;
       setAuthToken(token);
-      router.push("/my-agent");
+      router.push(`/my-agent/c/${uuidv4()}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "新規登録に失敗しました");
     } finally {

@@ -243,7 +243,30 @@ export const configureServer = {
             return new Date(dateB).getTime() - new Date(dateA).getTime();
           });
 
-          return c.json(sortedThreads);
+          // 今日、過去7日間、それ以前に分類
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+
+          const oneWeekAgo = new Date();
+          oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+          oneWeekAgo.setHours(0, 0, 0, 0);
+
+          const categorizedThreads = {
+            today: sortedThreads.filter(thread => {
+              const threadDate = new Date(thread.updatedAt || thread.createdAt || 0);
+              return threadDate >= today;
+            }),
+            pastWeek: sortedThreads.filter(thread => {
+              const threadDate = new Date(thread.updatedAt || thread.createdAt || 0);
+              return threadDate >= oneWeekAgo && threadDate < today;
+            }),
+            older: sortedThreads.filter(thread => {
+              const threadDate = new Date(thread.updatedAt || thread.createdAt || 0);
+              return threadDate < oneWeekAgo;
+            })
+          };
+
+          return c.json(categorizedThreads);
         } catch (error) {
           console.error('メッセージ履歴取得エラー:', error);
           return c.json({ success: false, message: 'メッセージ履歴の取得中にエラーが発生しました' }, 500);
@@ -410,9 +433,6 @@ export const configureServer = {
         }
       }
     }),
-
-
-
 
 
     registerApiRoute('/users', {

@@ -9,6 +9,7 @@ import { userInfoTool } from "../../tools/fetchUser";
 import { Memory } from '@mastra/memory';
 import { LibSQLStore } from '@mastra/core/storage/libsql';
 import { LibSQLVector } from '@mastra/core/vector/libsql';
+import { saveUserDataTool, retrieveUserDataTool } from "../../tools/userData";
 
 const storage = new LibSQLStore({
   config: {
@@ -53,7 +54,7 @@ export const userAgent = new Agent({
 社員が直面している状況や課題に対して、適切な情報を提供します。
 `,
   model,
-  tools: { userInfoTool },
+  tools: { userInfoTool, saveUserDataTool, retrieveUserDataTool },
   memory: userMemory,
   evals: {
     summarization: new SummarizationMetric(model),
@@ -72,7 +73,7 @@ ${username}が直面している状況や課題に対して、適切な情報を
 ${username}のユーザーIDは${userId}です。
 `,
     model,
-    tools: { userInfoTool },
+    tools: { userInfoTool, saveUserDataTool, retrieveUserDataTool },
     memory: userMemory,
     evals: {
       summarization: new SummarizationMetric(model),

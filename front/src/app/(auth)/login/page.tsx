@@ -17,6 +17,8 @@ import {
   FormMessage
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { v4 as uuidv4 } from 'uuid';
+
 
 export default function LoginPage() {
   const router = useRouter();
@@ -51,11 +53,8 @@ export default function LoginPage() {
 
       const res = await response.json();
       const token = res.user.token;
-      // JWTトークンを保存
       setAuthToken(token);
-
-      // ログイン成功後、マイエージェントページに遷移
-      router.push("/my-agent");
+      router.push(`/my-agent/c/${uuidv4()}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "ログインに失敗しました");
     } finally {
