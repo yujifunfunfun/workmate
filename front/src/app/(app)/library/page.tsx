@@ -4,7 +4,7 @@ import { Metadata } from "next";
 
 // メタデータを定義
 export const metadata: Metadata = {
-  title: "ライブラリ | WorkMate",
+  title: "ライブラリ | PaMi",
   description: "専門エージェントとワークフローのライブラリ",
 };
 

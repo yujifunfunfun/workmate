@@ -10,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "WorkMate",
+  title: "PaMi",
   description: "あなたの仕事をサポートするAIエージェントです",
 };
 

@@ -80,7 +80,7 @@ export default function RegisterPage() {
     <div className="flex items-center justify-center h-[calc(100vh-132px)]">
       <div className="w-full max-w-md p-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
         <div className="space-y-2 text-center mb-6">
-          <h1 className="text-3xl font-bold">WorkMateに新規登録</h1>
+          <h1 className="text-3xl font-bold">PaMiに新規登録</h1>
           <p className="text-gray-500 dark:text-gray-400">
             必要な情報を入力して登録してください
           </p>
