@@ -36,5 +36,5 @@ export const mastra = new Mastra({
     },
   },
   networks: { productStrategyPlanningNetwork },
-  server: configureServer
+  server: configureServer,
 });

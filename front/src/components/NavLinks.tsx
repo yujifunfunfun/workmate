@@ -7,8 +7,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { useState, useEffect } from "react";
 
 // サイドバーのアクティブなリンクのスタイル
-const activeLinkStyle = "bg-gray-100 dark:bg-gray-700 text-blue-600 dark:text-blue-400";
-const defaultLinkStyle = "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700";
+const activeLinkStyle = "bg-gray-100";
+const defaultLinkStyle = "text-gray-700 hover:bg-gray-100";
 
 
 

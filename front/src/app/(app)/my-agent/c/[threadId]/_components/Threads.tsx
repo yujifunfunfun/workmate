@@ -1,5 +1,4 @@
-import { PlusIcon, ArchiveIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { SquarePlus, ArchiveIcon, MessageSquareMore } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { v4 as uuidv4 } from 'uuid';
@@ -72,14 +71,20 @@ export const Threads = ({
   return (
     <div className="flex flex-col items-stretch gap-1.5 bg-white p-2 overflow-y-auto">
       {/* 新規スレッド作成ボタン */}
-      <Button
-        className="flex items-center justify-start gap-1 rounded-lg px-2.5 py-2 text-start"
-        variant="ghost"
-        onClick={handleCreateNewThread}
-      >
-        <PlusIcon className="size-4" />
-        新規チャット
-      </Button>
+      <div className="flex gap-0 justify-end">
+        <div
+          className="flex items-center justify-center w-[38px] h-[38px] hover:bg-gray-100 rounded-lg"
+          onClick={handleCreateNewThread}
+        >
+          <SquarePlus className="size-5" />
+        </div>
+        <Link
+          href={`${basePath}/histories`}
+          className="flex items-center justify-center w-[38px] h-[38px] hover:bg-gray-100 rounded-lg"
+        >
+          <MessageSquareMore className="size-5" />
+        </Link>
+      </div>
 
       {/* スレッドリスト */}
       <div className="overflow-y-auto flex flex-col gap-3">

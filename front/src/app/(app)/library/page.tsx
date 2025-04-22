@@ -46,7 +46,15 @@ export default async function LibraryPage({
       name: "議事録作成エージェント",
       description: "会議を録音し、議事録を作成します。",
       icon: "📝",
-      category: "カスタマーサポート",
+      category: "プロジェクト管理",
+      isAvailable: true
+    },
+    {
+      id: "schedule-adjustment",
+      name: "スケジュール調整エージェント",
+      description: "スケジュール調整エージェントです。",
+      icon: "🗓️",
+      category: "プロジェクト管理",
       isAvailable: true
     },
     {

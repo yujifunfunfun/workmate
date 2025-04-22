@@ -92,7 +92,7 @@ const ThreadWelcomeSuggestions: FC = () => {
         method="replace"
         autoSend
       >
-        <span className="line-clamp-2 text-ellipsis text-sm font-semibold">
+        <span className="line-clamp-2 text-ellipsis text-sm">
           あなたは何ができますか？
         </span>
       </ThreadPrimitive.Suggestion>
@@ -102,7 +102,7 @@ const ThreadWelcomeSuggestions: FC = () => {
         method="replace"
         autoSend
       >
-        <span className="line-clamp-2 text-ellipsis text-sm font-semibold">
+        <span className="line-clamp-2 text-ellipsis text-sm">
           あなたについて教えて下さい
         </span>
       </ThreadPrimitive.Suggestion>

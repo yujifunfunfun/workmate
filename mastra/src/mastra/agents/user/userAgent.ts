@@ -10,6 +10,8 @@ import { Memory } from '@mastra/memory';
 import { LibSQLStore } from '@mastra/core/storage/libsql';
 import { LibSQLVector } from '@mastra/core/vector/libsql';
 import { saveUserDataTool, retrieveUserDataTool } from "../../tools/userData";
+import { getScheduleTool } from "../../tools/schedule";
+
 
 const storage = new LibSQLStore({
   config: {
@@ -69,11 +71,10 @@ export function createUserAgent(username: string = "社員", userId: string) {
     name: `${username}専属エージェント`,
     instructions: `
 あなたは${username}専属エージェントです。
-${username}が直面している状況や課題に対して、適切な情報を提供します。
 ${username}のユーザーIDは${userId}です。
 `,
     model,
-    tools: { userInfoTool, saveUserDataTool, retrieveUserDataTool },
+    tools: { userInfoTool, saveUserDataTool, retrieveUserDataTool, getScheduleTool },
     memory: userMemory,
     evals: {
       summarization: new SummarizationMetric(model),
