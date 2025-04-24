@@ -226,3 +226,153 @@ export const chatHistoryBetweenMembersHandler = async (c: Context) => {
     }, 500);
   }
 };
+
+
+// いいね取得ハンドラー
+export const LikesHandler = async (c: Context) => {
+  try {
+    const user = getUserFromContext(c);
+    if (!user) {
+      return c.json({ success: false, message: 'ユーザー情報が見つかりません' }, 401);
+    }
+    const userId = user.id;
+    const result = await storageClient.execute({
+      sql: `
+        SELECT lm.*,
+                lb.username as liked_by_username, lb.first_name as liked_by_first_name,
+                lb.last_name as liked_by_last_name, lb.email as liked_by_email
+        FROM liked_messages lm
+        LEFT JOIN users lb ON lm.likedBy = lb.id
+        WHERE lm.userId = ?
+      `,
+      args: [userId]
+    });
+    const count = result.rows.length;
+
+    // ユーザーごとにグループ化
+    const userMessageMap = new Map();
+
+    // 全てのメッセージを処理
+    const likedMessages = await Promise.all(result.rows.map(async row => {
+      const memory = memberMemory;
+      const messageId = row.messageId;
+      if (!messageId) return null;
+      try {
+        const { uiMessages } = await memory.query({
+          resourceId: `${user.id}_${row.likedBy}`,
+          threadId : `${user.id}_${row.likedBy}`,
+          selectBy: {
+            include: [
+              {
+                id: messageId.toString(),
+              },
+            ],
+          }
+        });
+
+        // メッセージ内容と基本情報を取得
+        const filteredMessage = uiMessages.find(message => message.id === messageId.toString());
+        const messageContent = filteredMessage?.content || null;
+
+        // ユーザーIDとメッセージコンテンツをキーにしてグループ化
+        const userKey = row.likedBy;
+
+        if (!userMessageMap.has(userKey)) {
+          // 新しいユーザーエントリを作成
+          userMessageMap.set(userKey, {
+            id: row.id,
+            liked_by_last_name: row.liked_by_last_name,
+            liked_by_first_name: row.liked_by_first_name,
+            liked_by_username: row.liked_by_username,
+            messageId: messageId,
+            messages: [],
+            messageContents: new Map() // 内部で使用する一時マップ
+          });
+        }
+
+        // ユーザーのメッセージリストを取得
+        const userEntry = userMessageMap.get(userKey);
+
+        // 同じコンテンツのメッセージがすでに存在するか確認
+        if (messageContent && !userEntry.messageContents.has(messageContent)) {
+          // 新しいメッセージを追加
+          userEntry.messages.push({
+            content: messageContent,
+            likeCount: 1
+          });
+          userEntry.messageContents.set(messageContent, userEntry.messages.length - 1);
+        } else if (messageContent) {
+          // 既存のメッセージのlikeCountを増やす
+          const messageIndex = userEntry.messageContents.get(messageContent);
+          userEntry.messages[messageIndex].likeCount += 1;
+        }
+
+        return true; // 処理が成功したことを示す
+      } catch (error) {
+        console.error('メッセージ取得エラー:', error);
+        return null;
+      }
+    }));
+
+    for (const userEntry of userMessageMap.values()) {
+      delete userEntry.messageContents;
+    }
+
+    const groupedLikedMessages = Array.from(userMessageMap.values());
+
+
+    return c.json({groupedLikedMessages, count:count});
+  } catch (error) {
+    console.error('メッセージいいねエラー:', error);
+    return c.json({ success: false, message: 'メッセージいいね中にエラーが発生しました' }, 500);
+  }
+};
+
+
+
+// いいねランキング取得ハンドラー
+export const LikesRankingHandler = async (c: Context) => {
+  try {
+    const user = getUserFromContext(c);
+    if (!user) {
+      return c.json({ success: false, message: 'ユーザー情報が見つかりません' }, 401);
+    }
+    const userId = user.id;
+    const result = await storageClient.execute({
+      sql: `
+        SELECT
+          lm.userId,
+          u.username,
+          u.first_name,
+          u.last_name,
+          u.email,
+          COUNT(*) as like_count
+        FROM liked_messages lm
+        LEFT JOIN users u ON lm.userId = u.id
+        GROUP BY lm.userId, u.username, u.first_name, u.last_name, u.email
+        ORDER BY like_count DESC
+        LIMIT 10
+      `,
+      args: []
+    });
+
+    // ランキングデータの整形
+    const rankings = result.rows.map((row, index) => {
+      return {
+        rank: index + 1,
+        userId: row.userId,
+        username: row.username,
+        firstName: row.first_name,
+        lastName: row.last_name,
+        likeCount: row.like_count
+      };
+    });
+    console.log(rankings);
+
+    return c.json(rankings);
+  } catch (error) {
+    console.error('いいねランキング取得エラー:', error);
+    return c.json({ success: false, message: 'いいねランキング取得中にエラーが発生しました' }, 500);
+  }
+};
+

@@ -41,7 +41,7 @@ export function generateToken(user: { id: string; username: string; email: strin
   };
 
   return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: '24h'
+    expiresIn: '24Y'
   });
 }
 

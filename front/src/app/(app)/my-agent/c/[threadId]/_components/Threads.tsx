@@ -1,4 +1,4 @@
-import { SquarePlus, ArchiveIcon, MessageSquareMore } from "lucide-react";
+import { SquarePlus, MessageSquareHeart, MessageSquareMore } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { v4 as uuidv4 } from 'uuid';
@@ -70,14 +70,20 @@ export const Threads = ({
 
   return (
     <div className="flex flex-col items-stretch gap-1.5 bg-white p-2 overflow-y-auto">
-      {/* 新規スレッド作成ボタン */}
       <div className="flex gap-0 justify-end">
+
         <div
           className="flex items-center justify-center w-[38px] h-[38px] hover:bg-gray-100 rounded-lg"
           onClick={handleCreateNewThread}
         >
           <SquarePlus className="size-5" />
         </div>
+        <Link
+          href={`${basePath}/likes`}
+          className="flex items-center justify-center w-[38px] h-[38px] hover:bg-gray-100 rounded-lg"
+        >
+          <MessageSquareHeart className="size-5" />
+        </Link>
         <Link
           href={`${basePath}/histories`}
           className="flex items-center justify-center w-[38px] h-[38px] hover:bg-gray-100 rounded-lg"

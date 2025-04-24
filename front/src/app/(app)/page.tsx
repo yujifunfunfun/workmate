@@ -1,7 +1,64 @@
+'use client'
+
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
+import { Heart, User } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+interface LikeRankingUser {
+  rank: number;
+  userId: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  likeCount: number;
+}
+
 export default function Home() {
+  const { data: rankingData = [], error, isLoading } = useSWR<LikeRankingUser[]>(
+    `${process.env.NEXT_PUBLIC_MASTRA_API_URL}/chat/likes/ranking`,
+    fetcher
+  );
+  if (isLoading) return null;
+
   return (
-    <div className="container mx-auto">
-      <h1 className="text-3xl font-bold mb-6">ダッシュボード</h1>
+    <div>
+      <Card className="w-1/2">
+        <CardHeader>
+          <CardTitle>
+            いいねランキング
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {rankingData.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">ランキングデータがありません</p>
+          ) : (
+            <div className="space-y-3">
+              {rankingData.map((user) => (
+                <div
+                  key={user.userId}
+                  className={`flex items-center justify-between p-3 rounded-lg bg-gray-50`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center justify-center w-8 h-8 font-bold text-lg">
+                      {user.rank}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <User className="h-5 w-5 text-primary" />
+                      <span className="font-medium">{user.lastName} {user.firstName}</span>
+                      <span className="text-sm text-muted-foreground">@{user.username}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 bg-white px-3 py-1 rounded-full shadow-sm">
+                    <Heart className="h-4 w-4 fill-red-500 text-red-500" />
+                    <span className="font-bold">{user.likeCount}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

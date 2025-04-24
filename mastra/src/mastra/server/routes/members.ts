@@ -1,6 +1,6 @@
 import { registerApiRoute } from "@mastra/core/server";
 import { authMiddleware } from "../../../lib/middleware";
-import { memberChatStreamHandler, memberChatHistoryHandler, memberAgentsHandler, memberInfoHandler } from "../handlers/members";
+import { memberChatStreamHandler, memberChatHistoryHandler, memberAgentsHandler, memberInfoHandler, memberLikeMessageHandler } from "../handlers/members";
 
 
 const memberRouteConfigs = [
@@ -15,6 +15,12 @@ const memberRouteConfigs = [
     method: 'GET' as const,
     middleware: [authMiddleware],
     handler: memberChatHistoryHandler
+  },
+  {
+    url: '/members/:userId/chat/messages/:messageId/like',
+    method: 'POST' as const,
+    middleware: [authMiddleware],
+    handler: memberLikeMessageHandler
   },
   {
     url: '/members/agents',

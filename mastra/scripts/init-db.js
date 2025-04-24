@@ -26,6 +26,7 @@ async function main() {
     await createEvalsTable(client);
     await createTracesTable(client);
     await createUsersTable(client);
+    await createLikedMessagesTable(client);
 
     // テーブル一覧の表示
     const tables = await client.execute(`
@@ -169,6 +170,56 @@ async function createUsersTable(client) {
   } else {
     console.log('usersテーブルは既に存在します');
   }
+}
+
+// likedMessagesテーブルを作成する関数
+async function createLikedMessagesTable(client) {
+  console.log('liked_messagesテーブル作成を試みます...');
+
+  // liked_messagesテーブルの存在をチェック
+  const checkTableResult = await client.execute(`
+    SELECT name FROM sqlite_master
+    WHERE type='table' AND name='liked_messages'
+  `);
+
+  if (checkTableResult.rows.length > 0) {
+    console.log('liked_messagesテーブルが既に存在します。削除します...');
+    await client.execute(`DROP TABLE liked_messages`);
+    console.log('liked_messagesテーブルを削除しました');
+  }
+
+  console.log('liked_messagesテーブルを作成します...');
+
+  // テーブルの作成
+  await client.execute(`
+    CREATE TABLE IF NOT EXISTS liked_messages (
+      id TEXT NOT NULL PRIMARY KEY,
+      resourceId TEXT NOT NULL,
+      threadId TEXT NOT NULL,
+      messageId TEXT NOT NULL,
+      userId TEXT NOT NULL,
+      likedBy TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (likedBy) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+  console.log('liked_messagesテーブルが作成されました');
+
+  // インデックスの作成
+  await client.execute(`
+    CREATE INDEX IF NOT EXISTS idx_liked_messages_user ON liked_messages(userId)
+  `);
+  await client.execute(`
+    CREATE INDEX IF NOT EXISTS idx_liked_messages_thread ON liked_messages(threadId)
+  `);
+  await client.execute(`
+    CREATE INDEX IF NOT EXISTS idx_liked_messages_message ON liked_messages(messageId)
+  `);
+  await client.execute(`
+    CREATE INDEX IF NOT EXISTS idx_liked_messages_likedby ON liked_messages(likedBy)
+  `);
+  console.log('liked_messagesテーブルにインデックスが作成されました');
 }
 
 main();

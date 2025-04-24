@@ -20,7 +20,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
         </main>
         <footer className="bg-white dark:bg-gray-800 border-t py-4 w-full mt-auto">
           <div className="container mx-auto px-4 text-center text-sm text-gray-500 dark:text-gray-400">
-            &copy; 2025 PaMi
+            &copy; 2025 PaMiAI
           </div>
         </footer>
       </div>

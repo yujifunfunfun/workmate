@@ -21,7 +21,7 @@
     "@mastra/evals": "^0.1.16",
     "@mastra/mcp": "^0.3.10",
     "@mastra/mcp-registry-registry": "^0.0.1",
-    "@mastra/memory": "^0.2.9",
+    "@mastra/memory": "^0.3.0",
     "@mastra/rag": "^0.1.16",
     "@mastra/voice-openai": "^0.1.13",
     "@playwright/mcp": "^0.0.10",

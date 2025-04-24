@@ -159,6 +159,36 @@ export const memberChatHistoryHandler = async (c: Context) => {
   }
 };
 
+
+// メンバーチャットメッセージいいねハンドラー
+export const memberLikeMessageHandler = async (c: Context) => {
+  try {
+    const ownerUserId = c.req.param('userId');
+    const messageId = c.req.param('messageId');
+
+    const user = getUserFromContext(c);
+    if (!user) {
+      return c.json({ success: false, message: 'ユーザー情報が見つかりません' }, 401);
+    }
+    const likedUserId = user.id;
+    const resourceId = `${ownerUserId}_${likedUserId}`;
+    const threadId = `${ownerUserId}_${likedUserId}`;
+    const id = crypto.randomUUID();
+    const likedMessage = await storageClient.execute({
+      sql: `
+        INSERT INTO liked_messages (id, resourceId, threadId, messageId, userId, likedBy)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `,
+      args: [id, resourceId, threadId, messageId, ownerUserId, likedUserId]
+    });
+
+    return c.json({ success: true, message: 'メッセージいいねが完了しました' });
+  } catch (error) {
+    console.error('メッセージいいねエラー:', error);
+    return c.json({ success: false, message: 'メッセージいいね中にエラーが発生しました' }, 500);
+  }
+};
+
 // メンバーエージェント一覧ハンドラー
 export const memberAgentsHandler = async (c: Context) => {
   try {

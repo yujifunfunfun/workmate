@@ -123,7 +123,7 @@ export default function MemberAgentClient({ username }: MemberAgentClientProps) 
           </div>
         </div>
       </div>
-      <MemberChatInterface owner={agent.owner} username={agent.username} avatarUrl={agent.avatarUrl} />
+      <MemberChatInterface owner={agent.owner} username={agent.username} avatarUrl={agent.avatarUrl} userId={member.id} />
     </div>
   );
 }
