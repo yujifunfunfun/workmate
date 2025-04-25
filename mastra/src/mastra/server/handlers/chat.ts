@@ -51,7 +51,7 @@ export const chatStreamHandler = async (c: Context) => {
     }
 
     const username = user.username;
-    const agent = createUserAgent(username, user.id);
+    const agent = await createUserAgent(username, user.id);
 
     // streamメソッドを使用してストリーミングレスポンスを取得
     try {
@@ -367,8 +367,6 @@ export const LikesRankingHandler = async (c: Context) => {
         likeCount: row.like_count
       };
     });
-    console.log(rankings);
-
     return c.json(rankings);
   } catch (error) {
     console.error('いいねランキング取得エラー:', error);

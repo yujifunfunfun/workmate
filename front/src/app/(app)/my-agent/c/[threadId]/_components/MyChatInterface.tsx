@@ -1,10 +1,10 @@
-import { Thread } from "@/components/assistant-ui/thread";
 import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import { AssistantRuntimeProvider } from "@assistant-ui/react";
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { makeAssistantToolUI } from "@assistant-ui/react";
 import { Loader2 } from "lucide-react";
+import { Thread } from "./assistant-ui/thread";
 
 
 type Props = {
@@ -65,6 +65,7 @@ function MyChatThread({ initialMessages, token }: MyChatThreadProps) {
     <AssistantRuntimeProvider runtime={runtime}>
       <Thread />
       <UserInfoToolUI />
+      <NewsToolUI />
     </AssistantRuntimeProvider>
   );
 }
@@ -85,6 +86,31 @@ const UserInfoToolUI = makeAssistantToolUI<UserInfoArgs, UserInfoResult>({
       <div className="p-4 bg-gray-50 border rounded-md mb-4">
         <div className="flex items-center space-x-2 ">
           <span className="font-medium text-gray-800">ユーザー情報を検索中...</span>
+          {status.type === 'running' && (
+            <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+          )}
+        </div>
+      </div>
+    );
+  },
+});
+
+
+type NewsArgs = {
+  query: string;
+};
+type NewsResult = {
+  title: string;
+  description: string;
+  url: string;
+};
+const NewsToolUI = makeAssistantToolUI<NewsArgs, NewsResult>({
+  toolName: "hackernews_getStories",
+  render: ({ args, status, result }) => {
+    return (
+      <div className="p-4 bg-gray-50 border rounded-md mb-4">
+        <div className="flex items-center space-x-2 ">
+          <span className="font-medium text-gray-800">ニュースを検索中...</span>
           {status.type === 'running' && (
             <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
           )}

@@ -11,6 +11,7 @@ import { LibSQLStore } from '@mastra/core/storage/libsql';
 import { LibSQLVector } from '@mastra/core/vector/libsql';
 import { saveUserDataTool, retrieveUserDataTool } from "../../tools/userData";
 import { getScheduleTool } from "../../tools/schedule";
+import { mcp } from "./mcp";
 
 
 const storage = new LibSQLStore({
@@ -48,15 +49,15 @@ export const userMemory = new Memory({
   },
 });
 
-// デフォルトのユーザーエージェント（初期設定用）
 export const userAgent = new Agent({
   name: "社員専属エージェント",
   instructions: `
 あなたは社員専属エージェントです。
 社員が直面している状況や課題に対して、適切な情報を提供します。
+ニュースはmcpのhackernewsから取得し、出力する場合は、タイトル（リンク付き）、解説、あなたの考えを出力してください。
 `,
   model,
-  tools: { userInfoTool, saveUserDataTool, retrieveUserDataTool },
+  tools: { ...await mcp.getTools(), userInfoTool, saveUserDataTool, retrieveUserDataTool, getScheduleTool },
   memory: userMemory,
   evals: {
     summarization: new SummarizationMetric(model),
@@ -65,16 +66,17 @@ export const userAgent = new Agent({
   },
 });
 
-// ユーザー名に基づいてカスタマイズされたエージェントを生成するファクトリー関数
-export function createUserAgent(username: string = "社員", userId: string) {
+
+export async function createUserAgent(username: string = "社員", userId: string) {
   return new Agent({
     name: `${username}専属エージェント`,
     instructions: `
 あなたは${username}専属エージェントです。
 ${username}のユーザーIDは${userId}です。
+ニュースを聞かれたら、mcpのhackernewsから取得し、出力する場合は、タイトル（リンク付き）、解説、あなたの考えを出力してください。
 `,
     model,
-    tools: { userInfoTool, saveUserDataTool, retrieveUserDataTool, getScheduleTool },
+    tools: { ...await mcp.getTools(), userInfoTool, saveUserDataTool, retrieveUserDataTool, getScheduleTool },
     memory: userMemory,
     evals: {
       summarization: new SummarizationMetric(model),

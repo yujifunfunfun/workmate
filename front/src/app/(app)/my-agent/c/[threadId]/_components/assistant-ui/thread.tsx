@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { MarkdownText } from "@/components/assistant-ui/markdown-text";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
+import { InitialChatContents } from "../InitialChatContents";
 
 export const Thread: FC = () => {
   return (
@@ -71,13 +72,13 @@ const ThreadScrollToBottom: FC = () => {
 const ThreadWelcome: FC = () => {
   return (
     <ThreadPrimitive.Empty>
-      <div className="flex w-full max-w-[var(--thread-max-width)] flex-grow flex-col">
-        <div className="flex w-full flex-grow flex-col items-center justify-center">
-          <p className="mt-4 font-medium">
-            お手伝いできることはありますか？
-          </p>
+      <div className="flex w-full  flex-grow flex-col">
+        <div className="flex w-7/8 flex-grow flex-col mx-auto">
+          <InitialChatContents />
         </div>
-        <ThreadWelcomeSuggestions />
+        <div className="w-full mx-auto max-w-[var(--thread-max-width)]">
+          <ThreadWelcomeSuggestions />
+        </div>
       </div>
     </ThreadPrimitive.Empty>
   );
