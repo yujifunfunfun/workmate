@@ -164,7 +164,7 @@ export default async function LibraryPage({
     : allApps.filter(app => app.category === activeCategory);
 
   return (
-    <div className="container">
+    <div>
       {/* セグメントリンク */}
       <div className="flex mb-6 overflow-x-auto pb-2 gap-2">
         {categories.map((category) => (

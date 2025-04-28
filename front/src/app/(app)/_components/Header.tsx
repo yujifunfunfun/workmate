@@ -19,7 +19,7 @@ export function Header() {
     return <Skeleton className="h-10 w-full" />;
   }
   return (
-    <header className="bg-white dark:bg-gray-800 shadow py-4">
+    <header className="bg-white shadow py-4 sticky top-0 z-9">
       <div className="flex justify-end items-center px-4 gap-2">
         <Button
           variant="ghost"

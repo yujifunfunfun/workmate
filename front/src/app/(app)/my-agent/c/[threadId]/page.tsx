@@ -16,7 +16,7 @@ export default function MyAgentPage() {
 
 
   return (
-    <div className="grid h-[81vh] grid-cols-[220px_1fr] gap-x-2">
+    <div className="grid h-[calc(100vh-96px)] grid-cols-[220px_1fr] gap-x-2">
       <MyChatTreads token={token} />
       <MyChatInterface token={token}/>
     </div>

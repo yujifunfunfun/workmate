@@ -85,8 +85,8 @@ export default function MemberAgentClient({ username }: MemberAgentClientProps) 
   };
 
   return (
-    <div className="container">
-      <div className="mb-6 bg-white rounded-lg shadow-sm p-6 border">
+    <div>
+      <div className="mb-4 bg-white rounded-lg shadow-sm p-6 border">
         <div className="flex items-start gap-6">
           <div className="relative h-20 w-20 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
             {agent.avatarUrl ? (

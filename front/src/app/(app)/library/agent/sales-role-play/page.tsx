@@ -55,7 +55,7 @@ export default function SalesRolePlayPage() {
   };
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col h-[calc(100vh-96px)]">
       <div className="mb-4">
         <h1 className="text-xl font-bold text-gray-800">
           営業ロープレエージェント
@@ -65,7 +65,7 @@ export default function SalesRolePlayPage() {
         </p>
       </div>
 
-      <div className="flex flex-col h-[62vh]">
+      <div className="flex flex-col h-full">
         <Card className="flex-grow overflow-hidden flex flex-col gap-0 p-0">
           <CardContent className="p-4 flex-grow overflow-y-auto space-y-3">
             {transcriptions.length === 0 ? (

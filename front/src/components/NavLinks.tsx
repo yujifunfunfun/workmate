@@ -14,13 +14,13 @@ const defaultLinkStyle = "text-gray-700 hover:bg-gray-100";
 
 export function NavLinks() {
   return (
-    <nav className="p-2">
-      <ul className="space-y-1">
+    <nav className="p-2 pt-4">
+      <ul className="space-y-6">
         <li>
           <NavLink
             href="/"
-            icon={<Home className="w-5 h-5 mr-2" />}
-            label="ダッシュボード"
+            icon={<Home className="w-5 h-5" />}
+            label="ホーム"
           />
         </li>
         <li>
@@ -29,14 +29,14 @@ export function NavLinks() {
         <li>
           <NavLink
             href="/members"
-            icon={<Users className="w-5 h-5 mr-2" />}
-            label="メンバーズエージェント"
+            icon={<Users className="w-5 h-5" />}
+            label="メンバー"
           />
         </li>
         <li>
           <NavLink
             href="/library"
-            icon={<Bookmark className="w-5 h-5 mr-2" />}
+            icon={<Bookmark className="w-5 h-5" />}
             label="ライブラリ"
           />
         </li>
@@ -52,10 +52,12 @@ function NavLink({ href, icon, label, onClick }: { href: string; icon: React.Rea
   return (
     <Link
       href={href}
-      className={`flex items-center p-2 rounded-lg ${isActive ? activeLinkStyle : defaultLinkStyle}`}
+      className={`flex flex-col items-center text-center text-[10px] gap-0 `}
       onClick={onClick}
     >
-      {icon}
+      <div className={`p-2 rounded-md ${isActive ? activeLinkStyle : defaultLinkStyle}`}>
+        {icon}
+      </div>
       <span>{label}</span>
     </Link>
   );
@@ -76,10 +78,12 @@ function MyAgentLink() {
   return (
     <Link
       href={href}
-      className={`flex items-center p-2 rounded-lg ${isActive ? activeLinkStyle : defaultLinkStyle}`}
+      className={`flex flex-col items-center text-center text-[10px] gap-0`}
       onClick={onClick}
     >
-      <Bot className="w-5 h-5 mr-2" />
+      <div className={`p-2 rounded-md ${isActive ? activeLinkStyle : defaultLinkStyle}`}>
+        <Bot className="w-5 h-5" />
+      </div>
       <span>マイエージェント</span>
     </Link>
   );

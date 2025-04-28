@@ -74,7 +74,7 @@ export default function MembersAgentPage() {
   const totalPages = pagination ? Math.ceil(pagination.total / pageSize) : 0;
 
   return (
-    <div className="container mx-auto">
+    <div>
       <FilterHeader
         initialSearch={search}
         initialDepartment={department}

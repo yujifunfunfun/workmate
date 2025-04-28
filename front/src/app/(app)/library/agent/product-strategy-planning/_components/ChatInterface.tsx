@@ -17,7 +17,7 @@ export function ChatInterface() {
   });
 
   return (
-    <div className="flex flex-col h-[81vh]">
+    <div className="flex flex-col">
       <Card className="flex-grow overflow-hidden flex flex-col gap-0">
         <CardContent className="p-4 flex-grow overflow-y-auto space-y-4">
           {messages.length === 0 ? (

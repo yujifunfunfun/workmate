@@ -59,7 +59,7 @@ export default function Page() {
   const selectedChatData = data.find((chat: any) => chat.id === selectedChat);
 
   return (
-    <div className="flex h-[81vh]">
+    <div className="flex h-[calc(100vh-96px)]">
       {/* トークリスト側 */}
       <div className="w-2/9 border-r overflow-y-auto bg-white">
         <div className="p-4 border-b">
