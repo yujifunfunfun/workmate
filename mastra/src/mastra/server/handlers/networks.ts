@@ -6,7 +6,6 @@ import { createScheduleAdjustmentNetwork } from "../../networks/schedule-adjustm
 
 export const scheduleAdjustmentNetworkStreamHandler = async (c: Context) => {
   try {
-    console.log("scheduleAdjustmentNetworkStreamHandler");
     const user = getUserFromContext(c);
     if (!user) return c.json({ success: false, message: 'ユーザー情報が見つかりません' }, 401);
 
@@ -15,18 +14,20 @@ export const scheduleAdjustmentNetworkStreamHandler = async (c: Context) => {
     const username = user.username;
     const members = body.members;
 
-    const userAgent = createUserAgent(username, userId);
+    const userAgent = await createUserAgent(username, userId);
     let agents = [userAgent];
-    for (const member of members) {
-      const memberAgent = createUserAgent(member.username, member.userId);
-      agents.push(memberAgent);
-    }
+
+    const memberAgents = await Promise.all(
+      members.map((member: { username: string; userId: string }) =>
+        createUserAgent(member.username, member.userId)
+      )
+    );
+    agents = [...agents, ...memberAgents];
 
     const network = createScheduleAdjustmentNetwork(agents);
     const streamResponse = await network.stream(body.prompt);
     return streamResponse.toDataStreamResponse();
-    }
-    catch (error) {
-      console.error('ストリーミング生成エラー:', error);
-    }
+  } catch (error) {
+    console.error('ストリーミング生成エラー:', error);
+  }
 };

@@ -160,7 +160,6 @@ export const chatHistoryHandler = async (c: Context) => {
     });
     return c.json(uiMessages);
   } catch (error) {
-    console.error('メッセージ履歴取得エラー:', error);
     return c.json([]);
   }
 };
