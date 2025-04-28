@@ -2,7 +2,7 @@ import { LibSQLVector } from '@mastra/core/vector/libsql';
 
 // Vector Database接続インスタンスの初期化
 const vectorStore = new LibSQLVector({
-  connectionUrl: process.env.DATABASE_URL || 'file:.db/user_vector.db',
+  connectionUrl: 'file:.db/user_vector.db',
 });
 
 // デフォルトのインデックス名

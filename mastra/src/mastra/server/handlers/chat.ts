@@ -3,7 +3,42 @@ import { createUserAgent, userMemory } from "../../agents/user/userAgent";
 import type { Context } from "hono";
 import { memberMemory } from "../../agents/member/memberAgent";
 import { storageClient } from "../../../lib/storageClient";
+import type { PrismaClient } from "@prisma/client";
 
+// 型定義の追加
+type UserWithDetails = {
+  id: string;
+  username: string;
+  email: string | null;
+  first_name: string;
+  last_name: string;
+  created_at: Date;
+  updated_at: Date;
+};
+
+type LikedMessageWithUser = {
+  id: string;
+  resourceId: string;
+  threadId: string;
+  messageId: string;
+  userId: string;
+  likedBy: string;
+  created_at: Date;
+  likedByUser: {
+    id: string;
+    username: string;
+    first_name: string;
+    last_name: string;
+    email: string | null;
+  };
+  user: {
+    id: string;
+    username: string;
+    first_name: string;
+    last_name: string;
+    email: string | null;
+  };
+};
 
 // チャットストリーム処理ハンドラー
 export const chatStreamHandler = async (c: Context) => {
@@ -180,35 +215,41 @@ export const threadsHandler = async (c: Context) => {
   }
 };
 
-
 export const chatHistoryBetweenMembersHandler = async (c: Context) => {
   try {
     const user = getUserFromContext(c);
     if (!user) {
       return c.json({ success: false, message: 'ユーザー情報が見つかりません' }, 401);
     }
-    let sql = `
-      SELECT id, username, email, first_name, last_name, created_at, updated_at
-      FROM users
-    `;
-    const result = await storageClient.execute({
-      sql,
+
+    // Prismaを使用してすべてのユーザーを取得
+    const users = await storageClient.user.findMany({
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        first_name: true,
+        last_name: true,
+        created_at: true,
+        updated_at: true
+      }
     });
-    const histories = await Promise.all(result.rows.map(async row => {
+
+    const histories = await Promise.all(users.map(async (user2: UserWithDetails) => {
       const memory = memberMemory;
       try {
         const { uiMessages } = await memory.query({
-          resourceId: `${user.id}_${row.id}`,
-          threadId : `${user.id}_${row.id}`,
+          resourceId: `${user.id}_${user2.id}`,
+          threadId : `${user.id}_${user2.id}`,
           selectBy: {
             last: 20
           }
         });
         return {
-          id: row.id,
-          username: row.username,
-          firstName: row.first_name,
-          lastName: row.last_name,
+          id: user2.id,
+          username: user2.username,
+          firstName: user2.first_name,
+          lastName: user2.last_name,
           messages: uiMessages
         }
       } catch (error) {
@@ -227,7 +268,6 @@ export const chatHistoryBetweenMembersHandler = async (c: Context) => {
   }
 };
 
-
 // いいね取得ハンドラー
 export const LikesHandler = async (c: Context) => {
   try {
@@ -236,24 +276,47 @@ export const LikesHandler = async (c: Context) => {
       return c.json({ success: false, message: 'ユーザー情報が見つかりません' }, 401);
     }
     const userId = user.id;
-    const result = await storageClient.execute({
-      sql: `
-        SELECT lm.*,
-                lb.username as liked_by_username, lb.first_name as liked_by_first_name,
-                lb.last_name as liked_by_last_name, lb.email as liked_by_email
-        FROM liked_messages lm
-        LEFT JOIN users lb ON lm.likedBy = lb.id
-        WHERE lm.userId = ?
-      `,
-      args: [userId]
+
+    // Prismaを使用していいねを取得
+    const likes = await storageClient.likedMessage.findMany({
+      where: {
+        userId: userId
+      },
+      include: {
+        likedByUser: {
+          select: {
+            id: true,
+            username: true,
+            first_name: true,
+            last_name: true,
+            email: true
+          }
+        }
+      }
     });
-    const count = result.rows.length;
+
+    const count = likes.length;
+
+    // 結果をフォーマット
+    const formattedLikes = likes.map((like: LikedMessageWithUser) => ({
+      id: like.id,
+      resourceId: like.resourceId,
+      threadId: like.threadId,
+      messageId: like.messageId,
+      userId: like.userId,
+      likedBy: like.likedBy,
+      created_at: like.created_at,
+      liked_by_username: like.likedByUser.username,
+      liked_by_first_name: like.likedByUser.first_name,
+      liked_by_last_name: like.likedByUser.last_name,
+      liked_by_email: like.likedByUser.email
+    }));
 
     // ユーザーごとにグループ化
     const userMessageMap = new Map();
 
     // 全てのメッセージを処理
-    const likedMessages = await Promise.all(result.rows.map(async row => {
+    const likedMessages = await Promise.all(formattedLikes.map(async (row: any) => {
       const memory = memberMemory;
       const messageId = row.messageId;
       if (!messageId) return null;
@@ -292,7 +355,6 @@ export const LikesHandler = async (c: Context) => {
 
         // ユーザーのメッセージリストを取得
         const userEntry = userMessageMap.get(userKey);
-
         // 同じコンテンツのメッセージがすでに存在するか確認
         if (messageContent && !userEntry.messageContents.has(messageContent)) {
           // 新しいメッセージを追加
@@ -320,15 +382,12 @@ export const LikesHandler = async (c: Context) => {
 
     const groupedLikedMessages = Array.from(userMessageMap.values());
 
-
     return c.json({groupedLikedMessages, count:count});
   } catch (error) {
     console.error('メッセージいいねエラー:', error);
     return c.json({ success: false, message: 'メッセージいいね中にエラーが発生しました' }, 500);
   }
 };
-
-
 
 // いいねランキング取得ハンドラー
 export const LikesRankingHandler = async (c: Context) => {
@@ -337,36 +396,58 @@ export const LikesRankingHandler = async (c: Context) => {
     if (!user) {
       return c.json({ success: false, message: 'ユーザー情報が見つかりません' }, 401);
     }
-    const userId = user.id;
-    const result = await storageClient.execute({
-      sql: `
-        SELECT
-          lm.userId,
-          u.username,
-          u.first_name,
-          u.last_name,
-          u.email,
-          COUNT(*) as like_count
-        FROM liked_messages lm
-        LEFT JOIN users u ON lm.userId = u.id
-        GROUP BY lm.userId, u.username, u.first_name, u.last_name, u.email
-        ORDER BY like_count DESC
-        LIMIT 10
-      `,
-      args: []
+
+    // Prismaを使ったいいねのグループ化と集計
+    // SQLiteではgroup byとカウントをPrismaで直接実行する方法が制限されているため
+    // 代わりにすべてのいいねを取得してJavaScriptで集計する
+    const allLikes = await storageClient.likedMessage.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            first_name: true,
+            last_name: true,
+            email: true
+          }
+        }
+      }
     });
 
-    // ランキングデータの整形
-    const rankings = result.rows.map((row, index) => {
-      return {
-        rank: index + 1,
-        userId: row.userId,
-        username: row.username,
-        firstName: row.first_name,
-        lastName: row.last_name,
-        likeCount: row.like_count
-      };
+    // いいねをユーザーIDごとにグループ化して集計
+    const likesCountByUser = new Map<string, any>();
+    allLikes.forEach((like: LikedMessageWithUser) => {
+      const userId = like.userId;
+      const userInfo = like.user;
+
+      if (!likesCountByUser.has(userId)) {
+        likesCountByUser.set(userId, {
+          userId,
+          username: userInfo.username,
+          firstName: userInfo.first_name,
+          lastName: userInfo.last_name,
+          email: userInfo.email,
+          likeCount: 0
+        });
+      }
+
+      const userEntry = likesCountByUser.get(userId);
+      userEntry.likeCount += 1;
     });
+
+    // いいね数で降順ソートしてランキングを作成
+    const rankings = Array.from(likesCountByUser.values())
+      .sort((a, b) => b.likeCount - a.likeCount)
+      .slice(0, 10)
+      .map((entry, index) => ({
+        rank: index + 1,
+        userId: entry.userId,
+        username: entry.username,
+        firstName: entry.firstName,
+        lastName: entry.lastName,
+        likeCount: entry.likeCount
+      }));
+
     return c.json(rankings);
   } catch (error) {
     console.error('いいねランキング取得エラー:', error);

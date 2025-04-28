@@ -6,7 +6,7 @@ import { MDocument } from '@mastra/rag';
 
 // Vector Database接続インスタンスの初期化
 const vectorStore = new LibSQLVector({
-  connectionUrl: process.env.DATABASE_URL || 'file:.db/vector.db',
+  connectionUrl: 'file:.db/vector.db',
 });
 
 // デフォルトのインデックス名

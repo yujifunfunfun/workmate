@@ -2,6 +2,16 @@ import { getUserFromContext } from "../../../lib/middleware";
 import { storageClient } from "../../../lib/storageClient";
 import type { Context } from "hono";
 
+// ユーザーの型定義
+type UserData = {
+  id: string;
+  username: string;
+  email: string | null;
+  first_name: string;
+  last_name: string;
+  created_at: Date;
+  updated_at: Date;
+};
 
 // ユーザー一覧取得ハンドラー
 export const usersHandler = async (c: Context) => {
@@ -11,65 +21,59 @@ export const usersHandler = async (c: Context) => {
     const offset = parseInt(c.req.query('offset') || '0', 10);
     const search = c.req.query('search') || '';
 
-    // データベースからユーザー一覧を取得
-    let sql = `
-      SELECT id, username, email, first_name, last_name, created_at, updated_at
-      FROM users
-    `;
-
-    const args: any[] = [];
-
-    // 検索条件がある場合
-    if (search) {
-      sql += ` WHERE username LIKE ? OR email LIKE ? OR first_name LIKE ? OR last_name LIKE ?`;
-      const searchPattern = `%${search}%`;
-      args.push(searchPattern, searchPattern, searchPattern, searchPattern);
-    }
-
-    // ソートと制限
-    sql += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
-    args.push(limit, offset);
+    // Prismaを使用した検索条件
+    const whereCondition = search ? {
+      OR: [
+        { username: { contains: search } },
+        { email: { contains: search } },
+        { first_name: { contains: search } },
+        { last_name: { contains: search } }
+      ]
+    } : {};
 
     // ユーザー一覧の取得
-    const result = await storageClient.execute({
-      sql,
-      args
+    const users = await storageClient.user.findMany({
+      where: whereCondition,
+      orderBy: {
+        created_at: 'desc'
+      },
+      take: limit,
+      skip: offset,
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        first_name: true,
+        last_name: true,
+        created_at: true,
+        updated_at: true
+      }
     });
 
     // 総ユーザー数の取得
-    let countSql = `SELECT COUNT(*) as total FROM users`;
-    if (search) {
-      countSql += ` WHERE username LIKE ? OR email LIKE ? OR first_name LIKE ? OR last_name LIKE ?`;
-    }
-
-    const countResult = await storageClient.execute({
-      sql: countSql,
-      args: search ? [
-        `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`
-      ] : []
+    const total = await storageClient.user.count({
+      where: whereCondition
     });
 
-    const total = countResult.rows[0].total as number;
-
     // ユーザーデータのフォーマット
-    const users = result.rows.map(row => ({
-      id: row.id,
-      username: row.username,
-      email: row.email,
-      firstName: row.first_name,
-      lastName: row.last_name,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at
+    const formattedUsers = users.map((user: UserData) => ({
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      firstName: user.first_name,
+      lastName: user.last_name,
+      createdAt: user.created_at,
+      updatedAt: user.updated_at
     }));
 
     return c.json({
       success: true,
-      users,
+      users: formattedUsers,
       pagination: {
         total,
         limit,
         offset,
-        hasMore: offset + users.length < total
+        hasMore: offset + formattedUsers.length < total
       }
     });
   } catch (error) {

@@ -1,26 +1,26 @@
 import { storageClient } from "./storageClient";
 
 export async function fetchUserFromLibSQL(userId: string) {
-
   try {
-    const result = await storageClient.execute({
-      sql: "SELECT * FROM users WHERE id = ?",
-      args: [userId]
+    // Prismaを使用してユーザーを取得
+    const user = await storageClient.user.findUnique({
+      where: {
+        id: userId
+      }
     });
 
-    if (result.rows.length === 0) {
+    if (!user) {
       return null;
     }
 
-    const row = result.rows[0];
     return {
-      id: row.id as string,
-      username: row.username as string,
-      email: row.email as string,
-      last_name: row.last_name as string || "",
-      first_name: row.first_name as string || "",
-      createdAt: row.created_at as string || new Date().toISOString(),
-      updatedAt: row.updated_at as string || new Date().toISOString(),
+      id: user.id,
+      username: user.username,
+      email: user.email || "",
+      last_name: user.last_name || "",
+      first_name: user.first_name || "",
+      createdAt: user.created_at.toISOString(),
+      updatedAt: user.updated_at.toISOString(),
     };
   } catch (error) {
     console.error("ユーザー情報取得エラー:", error);

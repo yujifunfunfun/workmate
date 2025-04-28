@@ -9,7 +9,7 @@ const DEFAULT_INDEX_NAME = 'sales_cases';
 
 // Vector Database接続インスタンスの初期化
 const vectorStore = new LibSQLVector({
-  connectionUrl: process.env.DATABASE_URL || 'file:.db/vector.db',
+  connectionUrl: 'file:.db/vector.db',
 });
 
 /**
@@ -18,7 +18,7 @@ const vectorStore = new LibSQLVector({
 async function clearIndex() {
   try {
     const indexes = await vectorStore.listIndexes();
-    
+
     if (indexes.includes(DEFAULT_INDEX_NAME)) {
       console.log(`インデックス ${DEFAULT_INDEX_NAME} を削除します...`);
       await vectorStore.deleteIndex(DEFAULT_INDEX_NAME);
@@ -44,4 +44,4 @@ async function main() {
 }
 
 // スクリプト実行
-main(); 
+main();

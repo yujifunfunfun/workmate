@@ -1,22 +1,10 @@
 import crypto from 'crypto';
-import { createClient } from '@libsql/client';
 import jwt from 'jsonwebtoken';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-// __dirnameの取得（ESモジュールでは__dirnameが直接使えないため）
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const rootDir = path.resolve(__dirname, '../..');
+import { storageClient } from './storageClient';
 
 // 環境変数からシークレットキーを取得するか、デフォルト値を使用
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
-
-// データベース接続用クライアント
-const dbClient = createClient({
-  url: process.env.DB_URL || `file:${path.join(rootDir, '.db/storage.db')}`,
-});
 
 // パスワードのハッシュ化
 export function hashPassword(password: string): string {
@@ -47,19 +35,32 @@ export function generateToken(user: { id: string; username: string; email: strin
 
 // ユーザーの登録
 export async function registerUser(username: string, password: string, email: string, last_name: string, first_name: string): Promise<any> {
-  const userId = crypto.randomUUID();
   const hashedPassword = hashPassword(password);
 
   try {
-    await dbClient.execute({
-      sql: `
-        INSERT INTO users (id, username, password, email, last_name, first_name)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `,
-      args: [userId, username, hashedPassword, email || null, last_name || null, first_name || null]
+    // Prismaを使用してユーザーを作成
+    const user = await storageClient.user.create({
+      data: {
+        username,
+        password: hashedPassword,
+        email: email || null,
+        last_name: last_name || '',
+        first_name: first_name || ''
+      }
     });
 
-    return { id: userId, username, email, last_name, first_name, token: generateToken({ id: userId, username, email }) };
+    return {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      last_name: user.last_name,
+      first_name: user.first_name,
+      token: generateToken({
+        id: user.id,
+        username: user.username,
+        email: user.email || ''
+      })
+    };
   } catch (error) {
     console.error('ユーザー登録エラー:', error);
     throw error;
@@ -69,18 +70,18 @@ export async function registerUser(username: string, password: string, email: st
 // ユーザーの認証
 export async function authenticateUser(username: string, password: string): Promise<any> {
   try {
-    const result = await dbClient.execute({
-      sql: `SELECT * FROM users WHERE username = ?`,
-      args: [username]
+    // Prismaを使用してユーザーを検索
+    const user = await storageClient.user.findUnique({
+      where: {
+        username
+      }
     });
 
-    if (result.rows.length === 0) {
+    if (!user) {
       return null;
     }
 
-    const user = result.rows[0];
-
-    if (!verifyPassword(user.password as string, password)) {
+    if (!verifyPassword(user.password, password)) {
       return null;
     }
 
@@ -90,7 +91,11 @@ export async function authenticateUser(username: string, password: string): Prom
       email: user.email,
       last_name: user.last_name,
       first_name: user.first_name,
-      token: generateToken(user as any)
+      token: generateToken({
+        id: user.id,
+        username: user.username,
+        email: user.email || ''
+      })
     };
   } catch (error) {
     console.error('ユーザー認証エラー:', error);
@@ -101,16 +106,25 @@ export async function authenticateUser(username: string, password: string): Prom
 // ユーザーIDからユーザー情報を取得
 export async function getUserById(userId: string): Promise<any> {
   try {
-    const result = await dbClient.execute({
-      sql: `SELECT id, username, email, last_name, first_name FROM users WHERE id = ?`,
-      args: [userId]
+    // Prismaを使用してユーザーを検索
+    const user = await storageClient.user.findUnique({
+      where: {
+        id: userId
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        last_name: true,
+        first_name: true
+      }
     });
 
-    if (result.rows.length === 0) {
+    if (!user) {
       return null;
     }
 
-    return result.rows[0];
+    return user;
   } catch (error) {
     console.error('ユーザー取得エラー:', error);
     throw error;
@@ -120,9 +134,14 @@ export async function getUserById(userId: string): Promise<any> {
 // ユーザーのエージェントIDを更新
 export async function updateUserAgentId(userId: string, agentId: string): Promise<boolean> {
   try {
-    await dbClient.execute({
-      sql: `UPDATE users SET agent_id = ? WHERE id = ?`,
-      args: [agentId, userId]
+    // Prismaを使用してユーザーを更新
+    await storageClient.user.update({
+      where: {
+        id: userId
+      },
+      data: {
+        agent_id: agentId
+      }
     });
 
     return true;

@@ -1,0 +1,90 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String          @id @default(uuid())
+  username      String          @unique
+  password      String
+  email         String?         @unique
+  last_name     String
+  first_name    String
+  created_at    DateTime        @default(now())
+  updated_at    DateTime        @default(now()) @updatedAt
+  likedMessages LikedMessage[]  @relation("UserLikedMessages")
+  likedBy       LikedMessage[]  @relation("LikedByUser")
+
+  @@index([username])
+  @@index([email])
+  @@map("users")
+}
+
+model MastraEval {
+  id           String   @id @default(uuid())
+  input        String
+  output       String
+  result       String
+  agent_name   String
+  metric_name  String
+  instructions String
+  test_info    String
+  global_run_id String
+  run_id       String
+  created_at   DateTime @default(now())
+
+  @@index([agent_name, metric_name])
+  @@map("mastra_evals")
+}
+
+model MastraTrace {
+  id           String   @id @default(uuid())
+  parentSpanId String?
+  name         String
+  traceId      String
+  scope        String
+  kind         Int
+  attributes   String?
+  status       String?
+  events       String?
+  links        String?
+  other        String?
+  startTime    BigInt
+  endTime      BigInt
+  createdAt    DateTime @default(now())
+
+  @@index([traceId])
+  @@index([name])
+  @@map("mastra_traces")
+}
+
+model LikedMessage {
+  id         String   @id @default(uuid())
+  resourceId String
+  threadId   String
+  messageId  String
+  userId     String
+  likedBy    String
+  created_at DateTime @default(now())
+
+  user       User     @relation("UserLikedMessages", fields: [userId], references: [id], onDelete: Cascade)
+  likedByUser User    @relation("LikedByUser", fields: [likedBy], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([threadId])
+  @@index([messageId])
+  @@index([likedBy])
+  @@map("liked_messages")
+}

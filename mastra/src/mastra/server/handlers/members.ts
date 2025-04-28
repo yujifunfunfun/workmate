@@ -2,28 +2,48 @@ import { getUserFromContext } from "../../../lib/middleware";
 import { createMemberAgent, memberMemory } from "../../agents/member/memberAgent";
 import { storageClient } from "../../../lib/storageClient";
 import type { Context } from "hono";
+import crypto from 'crypto';
 
+// ユーザーデータの型定義
+type UserData = {
+  id: string;
+  username: string;
+  email: string | null;
+  first_name: string;
+  last_name: string;
+  created_at: Date;
+  updated_at: Date;
+};
 
 // メンバーチャットストリームハンドラー
 export const memberChatStreamHandler = async (c: Context) => {
   try {
     const ownerUsername = c.req.param('username');
-    const sql = `
-      SELECT id, username, email, first_name, last_name, created_at, updated_at
-      FROM users
-      WHERE username = ?
-    `;
-    const result = await storageClient.execute({
-      sql,
-      args: [ownerUsername]
+
+    // Prismaを使用してユーザーを検索
+    const owner = await storageClient.user.findUnique({
+      where: {
+        username: ownerUsername
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        first_name: true,
+        last_name: true,
+        created_at: true,
+        updated_at: true
+      }
     });
 
-    const ownerUserId = result.rows[0].id;
-    const ownerUserLastName = result.rows[0].last_name;
-    const ownerUserFirstName = result.rows[0].first_name;
-    if (!ownerUserId || !ownerUserLastName || !ownerUserFirstName) {
+    if (!owner || !owner.id || !owner.last_name || !owner.first_name) {
       return c.json({ success: false, message: 'ユーザー情報が見つかりません' }, 401);
     }
+
+    const ownerUserId = owner.id;
+    const ownerUserLastName = owner.last_name;
+    const ownerUserFirstName = owner.first_name;
+
     const user = getUserFromContext(c);
     const body = await c.req.json();
 
@@ -126,21 +146,22 @@ export const memberChatHistoryHandler = async (c: Context) => {
     }
 
     const ownerUsername = c.req.param('username');
-    const sql = `
-      SELECT id, username, email, first_name, last_name, created_at, updated_at
-      FROM users
-      WHERE username = ?
-    `;
-    const result = await storageClient.execute({
-      sql,
-      args: [ownerUsername]
+
+    // Prismaを使用してユーザーを検索
+    const owner = await storageClient.user.findUnique({
+      where: {
+        username: ownerUsername
+      },
+      select: {
+        id: true
+      }
     });
 
-    const ownerUserId = result.rows[0].id;
-    if (!ownerUserId) {
+    if (!owner || !owner.id) {
       return c.json({ success: false, message: 'ユーザー情報が見つかりません' }, 401);
     }
 
+    const ownerUserId = owner.id;
     const threadId = `${ownerUserId}_${user.id}`;
     const limit = parseInt(c.req.query('limit') || '20', 10);
     const memory = memberMemory;
@@ -173,13 +194,16 @@ export const memberLikeMessageHandler = async (c: Context) => {
     const likedUserId = user.id;
     const resourceId = `${ownerUserId}_${likedUserId}`;
     const threadId = `${ownerUserId}_${likedUserId}`;
-    const id = crypto.randomUUID();
-    const likedMessage = await storageClient.execute({
-      sql: `
-        INSERT INTO liked_messages (id, resourceId, threadId, messageId, userId, likedBy)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `,
-      args: [id, resourceId, threadId, messageId, ownerUserId, likedUserId]
+
+    // Prismaを使用していいねを作成
+    await storageClient.likedMessage.create({
+      data: {
+        resourceId,
+        threadId,
+        messageId,
+        userId: ownerUserId,
+        likedBy: likedUserId
+      }
     });
 
     return c.json({ success: true, message: 'メッセージいいねが完了しました' });
@@ -201,66 +225,64 @@ export const memberAgentsHandler = async (c: Context) => {
     const offset = parseInt(c.req.query('offset') || '0', 10);
     const search = c.req.query('search') || '';
 
-    // データベースからユーザー一覧を取得
-    let sql = `
-      SELECT id, username, email, first_name, last_name, created_at, updated_at
-      FROM users
-      WHERE id != ?
-    `;
-
-    const args: any[] = [user.id];
-
-    // 検索条件がある場合
-    if (search) {
-      sql += ` AND (username LIKE ? OR email LIKE ? OR first_name LIKE ? OR last_name LIKE ?)`;
-      const searchPattern = `%${search}%`;
-      args.push(searchPattern, searchPattern, searchPattern, searchPattern);
-    }
-
-    // ソートと制限
-    sql += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
-    args.push(limit, offset);
+    // Prismaを使用した検索条件
+    const whereCondition = {
+      id: {
+        not: user.id
+      },
+      ...(search ? {
+        OR: [
+          { username: { contains: search } },
+          { email: { contains: search } },
+          { first_name: { contains: search } },
+          { last_name: { contains: search } }
+        ]
+      } : {})
+    };
 
     // ユーザー一覧の取得
-    const result = await storageClient.execute({
-      sql,
-      args
+    const members = await storageClient.user.findMany({
+      where: whereCondition,
+      orderBy: {
+        created_at: 'desc'
+      },
+      take: limit,
+      skip: offset,
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        first_name: true,
+        last_name: true,
+        created_at: true,
+        updated_at: true
+      }
     });
 
     // 総ユーザー数の取得
-    let countSql = `SELECT COUNT(*) as total FROM users WHERE id != ?`;
-    if (search) {
-      countSql += ` AND (username LIKE ? OR email LIKE ? OR first_name LIKE ? OR last_name LIKE ?)`;
-    }
-
-    const countResult = await storageClient.execute({
-      sql: countSql,
-      args: search ? [
-        user.id, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`
-      ] : [user.id]
+    const total = await storageClient.user.count({
+      where: whereCondition
     });
 
-    const total = countResult.rows[0].total as number;
-
     // ユーザーデータのフォーマット
-    const members = result.rows.map(row => ({
-      id: row.id,
-      username: row.username,
-      email: row.email,
-      firstName: row.first_name,
-      lastName: row.last_name,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at
+    const formattedMembers = members.map((member: UserData) => ({
+      id: member.id,
+      username: member.username,
+      email: member.email,
+      firstName: member.first_name,
+      lastName: member.last_name,
+      createdAt: member.created_at,
+      updatedAt: member.updated_at
     }));
 
     return c.json({
       success: true,
-      members: members,
+      members: formattedMembers,
       pagination: {
         total,
         limit,
         offset,
-        hasMore: offset + members.length < total
+        hasMore: offset + formattedMembers.length < total
       }
     });
   } catch (error) {
@@ -287,35 +309,38 @@ export const memberInfoHandler = async (c: Context) => {
       return c.json({ success: false, message: 'ユーザー名が必要です' }, 400);
     }
 
-    // データベースから指定したユーザー名のユーザーを取得
-    const sql = `
-      SELECT id, username, email, first_name, last_name, created_at, updated_at
-      FROM users
-      WHERE username = ?
-    `;
-
-    // ユーザー情報の取得
-    const result = await storageClient.execute({
-      sql,
-      args: [username]
+    // Prismaを使用してユーザーを検索
+    const member = await storageClient.user.findUnique({
+      where: {
+        username
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        first_name: true,
+        last_name: true,
+        created_at: true,
+        updated_at: true
+      }
     });
 
-    if (result.rows.length === 0) {
+    if (!member) {
       return c.json({ success: false, message: 'ユーザーが見つかりません' }, 404);
     }
 
     // ユーザーデータのフォーマット
-    const member = {
-      id: result.rows[0].id,
-      username: result.rows[0].username,
-      email: result.rows[0].email,
-      firstName: result.rows[0].first_name,
-      lastName: result.rows[0].last_name,
-      createdAt: result.rows[0].created_at,
-      updatedAt: result.rows[0].updated_at
+    const formattedMember = {
+      id: member.id,
+      username: member.username,
+      email: member.email,
+      firstName: member.first_name,
+      lastName: member.last_name,
+      createdAt: member.created_at,
+      updatedAt: member.updated_at
     };
 
-    return c.json(member);
+    return c.json(formattedMember);
   } catch (error) {
     console.error('ユーザー情報取得エラー:', error);
     return c.json({
