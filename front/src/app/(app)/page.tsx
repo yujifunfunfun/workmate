@@ -23,7 +23,7 @@ export default function Home() {
 
   return (
     <div>
-      <Card className="w-1/2">
+      <Card className="w-1/3">
         <CardHeader>
           <CardTitle>
             いいねランキング

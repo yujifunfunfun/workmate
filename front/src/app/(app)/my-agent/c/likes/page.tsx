@@ -32,7 +32,7 @@ export default function LikesPage() {
   if (isLoading) return null;
 
   const groupedLikedMessages = data?.groupedLikedMessages || [];
-
+  console.log(groupedLikedMessages);
   return (
     <div className="space-y-4">
       <Card>

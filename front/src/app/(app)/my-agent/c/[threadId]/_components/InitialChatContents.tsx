@@ -107,7 +107,7 @@ export const InitialChatContents = () => {
       </div>
 
       {/* タブコンテンツ */}
-      <div className="bg-white px-2 flex-1 min-h-0 max-h-[400px] overflow-y-auto">
+      <div className="bg-white px-2 flex-1 min-h-0 max-h-[450px] overflow-y-auto">
         {/* ニュースタブ */}
         {activeTab === "news" && (
           <div className="h-full">
