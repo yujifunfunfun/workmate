@@ -1,9 +1,8 @@
-import { authMiddleware, getUserFromContext } from "../../../lib/middleware";
+import { getUserFromContext } from "../../../lib/middleware";
 import { createUserAgent, userMemory } from "../../agents/user/userAgent";
 import type { Context } from "hono";
 import { memberMemory } from "../../agents/member/memberAgent";
 import { storageClient } from "../../../lib/storageClient";
-import type { PrismaClient } from "@prisma/client";
 
 // 型定義の追加
 type UserWithDetails = {
@@ -16,7 +15,8 @@ type UserWithDetails = {
   updated_at: Date;
 };
 
-type LikedMessageWithUser = {
+// いいねの型定義を分離
+type LikedMessageBase = {
   id: string;
   resourceId: string;
   threadId: string;
@@ -24,6 +24,10 @@ type LikedMessageWithUser = {
   userId: string;
   likedBy: string;
   created_at: Date;
+};
+
+// LikesHandlerで使用
+type LikedMessageWithLikedByUser = LikedMessageBase & {
   likedByUser: {
     id: string;
     username: string;
@@ -31,6 +35,10 @@ type LikedMessageWithUser = {
     last_name: string;
     email: string | null;
   };
+};
+
+// LikesRankingHandlerで使用
+type LikedMessageForRanking = LikedMessageBase & {
   user: {
     id: string;
     username: string;
@@ -39,6 +47,7 @@ type LikedMessageWithUser = {
     email: string | null;
   };
 };
+
 
 // チャットストリーム処理ハンドラー
 export const chatStreamHandler = async (c: Context) => {
@@ -297,7 +306,7 @@ export const LikesHandler = async (c: Context) => {
     const count = likes.length;
 
     // 結果をフォーマット
-    const formattedLikes = likes.map((like: LikedMessageWithUser) => ({
+    const formattedLikes = likes.map((like: LikedMessageWithLikedByUser) => ({
       id: like.id,
       resourceId: like.resourceId,
       threadId: like.threadId,
@@ -415,7 +424,7 @@ export const LikesRankingHandler = async (c: Context) => {
 
     // いいねをユーザーIDごとにグループ化して集計
     const likesCountByUser = new Map<string, any>();
-    allLikes.forEach((like: LikedMessageWithUser) => {
+    allLikes.forEach((like: LikedMessageForRanking) => {
       const userId = like.userId;
       const userInfo = like.user;
 

@@ -7,6 +7,7 @@ import { AgentList } from "./_components/AgentList";
 import { MemberAgent } from "@/types/agent";
 import { useMemberAgents } from "@/hooks/useMemberAgents";
 
+
 const mockAgentData = [
   {
     department: "営業部",

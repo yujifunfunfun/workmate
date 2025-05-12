@@ -13,7 +13,7 @@ export function AgentCard({ agent }: AgentCardProps) {
 
   return (
     <Link href={`/members/${username}`} className="h-fit">
-      <div className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white">
+      <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow">
         <div className="p-6">
           <div className="flex items-start gap-4">
             <div className="relative h-16 w-16 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">

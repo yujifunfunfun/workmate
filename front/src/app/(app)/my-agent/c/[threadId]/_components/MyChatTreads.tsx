@@ -25,7 +25,6 @@ export function MyChatTreads({ token }: Props) {
       revalidateOnFocus: true,
     }
   );
-  const a = [] as any;
 
   return (
     <Threads threads={threads} />

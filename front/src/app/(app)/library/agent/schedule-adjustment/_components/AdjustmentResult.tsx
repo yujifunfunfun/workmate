@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MarkdownRenderer } from "@/app/(app)/library/agent/sales-case/_components/MarkdownRenderer";
+import ReactMarkdown from 'react-markdown';
 
 // 検索結果表示コンポーネント
 export function AdjustmentResult({ result }: { result: string }) {
@@ -12,7 +12,7 @@ export function AdjustmentResult({ result }: { result: string }) {
       </CardHeader>
       <CardContent>
         <div className="bg-white dark:bg-gray-800 rounded-md overflow-y-auto max-h-[600px]">
-          <MarkdownRenderer markdown={result} />
+          <ReactMarkdown>{result}</ReactMarkdown>
         </div>
       </CardContent>
     </Card>

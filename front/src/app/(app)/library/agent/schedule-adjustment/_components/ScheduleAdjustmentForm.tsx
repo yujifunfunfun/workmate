@@ -9,6 +9,7 @@ import { Loader2 } from "lucide-react";
 import { useMemberAgents } from "@/hooks/useMemberAgents";
 import Select, { MultiValue, ActionMeta } from 'react-select';
 import { useState, FormEvent, useEffect } from "react";
+import ReactMarkdown from 'react-markdown';
 
 
 // メンバーオプションの型定義

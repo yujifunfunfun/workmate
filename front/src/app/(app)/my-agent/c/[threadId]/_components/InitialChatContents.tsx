@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Bot } from "lucide-react";
+
 
 export const InitialChatContents = () => {
   // タブの状態管理
@@ -62,7 +64,6 @@ export const InitialChatContents = () => {
     { id: 5, sender: "人事部", subject: "福利厚生制度の変更について", time: "昨日" },
   ];
 
-  // スケジュールのモックデータ
   const scheduleItems = [
     { id: 1, title: "プロジェクトキックオフミーティング", time: "13:00-14:00", location: "会議室A" },
     { id: 2, title: "クライアントとの商談", time: "15:30-16:30", location: "オンライン" },
@@ -72,8 +73,13 @@ export const InitialChatContents = () => {
   ];
 
   return (
-    <div className="w-full h-full flex flex-col">
-      <div className="flex space-x-2 mb-5 px-2">
+    <div className="w-full h-full flex flex-col items-center justify-center">
+      <Bot className="w-14 h-14 mb-4" />
+      <p>あなた専属のエージェントです。</p>
+      <p>日々の協働を通じてあなたの思考パターン・知識・好みを学習し、</p>
+      <p>あなたのスタイルに合わせて成長し効率的なサポートを提供します。</p>
+
+      {/* <div className="flex space-x-2 mb-5 px-2">
         <button
           className={`cursor-pointer py-2 px-4 font-medium text-sm rounded-lg transition-all duration-200 ${
             activeTab === "news"
@@ -105,10 +111,7 @@ export const InitialChatContents = () => {
           スケジュール
         </button>
       </div>
-
-      {/* タブコンテンツ */}
       <div className="bg-white px-2 flex-1 min-h-0 max-h-[450px] overflow-y-auto">
-        {/* ニュースタブ */}
         {activeTab === "news" && (
           <div className="h-full">
             <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
@@ -130,7 +133,6 @@ export const InitialChatContents = () => {
           </div>
         )}
 
-        {/* メールタブ */}
         {activeTab === "email" && (
           <div className="h-full">
             <ul className="divide-y divide-gray-200">
@@ -149,7 +151,6 @@ export const InitialChatContents = () => {
           </div>
         )}
 
-        {/* スケジュールタブ */}
         {activeTab === "schedule" && (
           <div className="h-full">
             <ul className="divide-y divide-gray-200">
@@ -165,7 +166,7 @@ export const InitialChatContents = () => {
             </ul>
           </div>
         )}
-      </div>
+      </div> */}
     </div>
   );
 };
